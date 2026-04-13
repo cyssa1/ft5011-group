@@ -1,0 +1,289 @@
+DATASET DESCRIPTION: sentiment_dataset.csv
+==========================================
+
+
+OVERVIEW
+--------
+The dataset contains daily news sentiment observations for 10 large-capitalisation US
+technology stocks — Apple (AAPL), Microsoft (MSFT), NVIDIA (NVDA), Oracle (ORCL),
+Cisco (CSCO), IBM (IBM), AMD (AMD), Salesforce (CRM), Intel (INTC), and Qualcomm (QCOM)
+— covering the period from 1 January 2015 to 31 December 2024. The dataset contains
+26,090 rows and 15 columns, representing 2,609 trading days per ticker. Each row
+represents one trading day for one ticker. There are zero missing values across all
+columns.
+
+The raw data was sourced from Bloomberg's news sentiment feed (US-30 Sentiment.xlsx),
+which provides professionally computed sentiment scores and publication statistics derived
+from financial news articles. The original Excel file contained 29 sheets — one per
+stock — with a non-standard 4-row header structure. Only the 10 sheets corresponding to
+the project tickers were extracted. All Chinese news columns were dropped because that
+data series only begins in 2022 for most tickers, making it unsuitable for the full
+2015–2024 training window. After parsing, filtering, and imputation, the dataset is
+fully clean with no NaN values.
+
+
+SOURCE DATA STRUCTURE (RAW EXCEL)
+----------------------------------
+Each sheet in the source Excel file follows this layout:
+
+  Excel Row 1 : "Start Date" | start timestamp | blank ...
+  Excel Row 2 : "End Date"   | end timestamp   | blank ...
+  Excel Row 3 : blank row
+  Excel Row 4 : ticker name (e.g. "AAPL US Equity")
+  Excel Row 5 : column headers (Dates, NEWS_SENTIMENT_DAILY_AVG, ...)
+  Excel Row 6+: daily data
+
+Parsing was performed by skipping the first 4 rows (skiprows=4) and using row 5 as the
+header. The NaT artifact row that appears as the first data row after parsing was dropped.
+Unnamed trailing columns and all CHINESE_NEWS_* columns were also dropped at this stage.
+
+
+MISSING VALUE TREATMENT
+------------------------
+Each column type was treated separately:
+
+  Count columns (pub_count, pos_count, neg_count, neu_count):
+    NaN values indicate days on which no news was reported for that ticker.
+    These were filled with 0 (integer), reflecting zero articles published.
+
+  Sentiment average (sent_avg):
+    On days where pub_count = 0, sentiment was explicitly set to 0.0 to represent
+    a neutral signal in the absence of any news coverage. Any remaining NaN values
+    (rare intra-week gaps) were forward-filled using the most recent available value,
+    then filled with 0.0 if no prior value existed.
+
+  Heat metrics (heat_pub, heat_read):
+    Forward-filled across gaps (the Bloomberg heat metric carries forward when no new
+    data is available), then filled with 0.0 if no prior value existed.
+
+Note: The sentiment data is already aligned to trading days in the source file
+(approximately 261 rows per year). Weekend and holiday dates are absent, so no
+weekend-bridging logic was required.
+
+
+COLUMN REFERENCE
+----------------
+
+1. Ticker
+   The stock's exchange ticker symbol (e.g., AAPL, NVDA). All 10 tickers are present in
+   the same file. This column is used to group observations by company when joining the
+   sentiment dataset to the price and technical indicator dataset.
+
+2. Date
+   The trading date in YYYY-MM-DD format. Covers 2015-01-01 to 2024-12-31. Only trading
+   days are present. This is the join key used to align sentiment features with the
+   corresponding row in technical_dataset.csv.
+
+
+RAW SENTIMENT COLUMNS (from Bloomberg)
+----------------------------------------
+
+3. sent_avg  (source: NEWS_SENTIMENT_DAILY_AVG)
+
+   What it is:
+   The daily average news sentiment score for the ticker, computed by Bloomberg across
+   all English-language news articles published on that day. The score is a continuous
+   value centred near zero: positive values indicate net positive tone in coverage,
+   negative values indicate net negative tone, and values near zero indicate neutral or
+   balanced coverage.
+
+   Why it is included:
+   Sentiment is the primary signal connecting news events to price expectations. Academic
+   research consistently shows that daily news sentiment predicts short-horizon equity
+   returns, particularly for large-cap technology stocks that attract high media attention.
+   This is the core feature of the sentiment modality. Unlike bag-of-words approaches,
+   the Bloomberg sentiment score is derived from a domain-specific financial language
+   model, making it more precise than general-purpose NLP tools for financial text.
+
+4. heat_pub  (source: NEWS_HEAT_PUB_DAVG)
+
+   What it is:
+   The publication heat score — a measure of the volume and velocity of news publications
+   relative to the ticker's historical baseline. A value of 1.0 represents average
+   publication activity; values above 1.0 indicate above-average media attention on that
+   day. This is a normalised metric and is therefore comparable across tickers.
+
+   Why it is included:
+   The intensity of media coverage (not just its direction) carries information. A
+   moderately positive sentiment score accompanied by very high publication heat is a
+   stronger signal than the same score on a quiet news day. Publication heat captures
+   the degree of market attention and can indicate upcoming volatility or news-driven
+   price movements.
+
+5. heat_read  (source: NEWS_HEAT_READ_DAVG)
+
+   What it is:
+   The readership heat score — a measure of how widely the published articles were
+   consumed, relative to the ticker's historical baseline. This reflects reader engagement
+   rather than publication volume, capturing whether articles are being actively read or
+   ignored.
+
+   Why it is included:
+   Readership heat is complementary to publication heat. A high number of articles that
+   are widely read indicates broad market awareness of a news event. Divergence between
+   high publication heat and low readership heat may indicate low-quality or redundant
+   coverage, while the combination of high publication and high readership heat is a
+   stronger signal of genuine market-moving news.
+
+6. pub_count  (source: NEWS_PUBLICATION_COUNT)
+
+   What it is:
+   The raw count of news articles published for the ticker on that trading day, as an
+   integer. This is the unnormalised version of the publication heat signal.
+
+   Why it is included:
+   The raw article count provides an absolute measure of coverage that the normalised heat
+   metric does not. Very small companies may have a high heat score even with only 2-3
+   articles; for our large-cap tickers, the absolute count better reflects the volume of
+   information flow into the market. This column is also used as the denominator for
+   computing pos_ratio and neg_ratio.
+
+7. pos_count  (source: NEWS_POS_SENTIMENT_COUNT)
+
+   What it is:
+   The number of articles classified as having positive sentiment for the ticker on that
+   day. An integer count.
+
+   Why it is included:
+   The signed decomposition of total articles into positive, negative, and neutral buckets
+   provides richer information than the average sentiment score alone. For example, a
+   sent_avg of 0.0 could mean all articles are neutral (low controversy) or that equal
+   numbers of strongly positive and strongly negative articles cancel out (high
+   controversy). Separating pos_count, neg_count, and neu_count allows the model to
+   distinguish between these two regimes.
+
+8. neg_count  (source: NEWS_NEG_SENTIMENT_COUNT)
+
+   What it is:
+   The number of articles classified as having negative sentiment for the ticker on that
+   day. An integer count.
+
+   Why it is included:
+   Negative news tends to have an asymmetric impact on stock prices — adverse events
+   often trigger sharper price moves than equivalent positive news. By including neg_count
+   separately, the model can learn this asymmetry directly from the data rather than
+   having it averaged away in sent_avg.
+
+9. neu_count  (source: NEWS_NEUTRAL_SENTIMENT_COUNT)
+
+   What it is:
+   The number of articles classified as neutral or mixed sentiment for the ticker on that
+   day. An integer count.
+
+   Why it is included:
+   A high neutral article count often reflects routine analyst coverage, earnings
+   previews, or factual reporting that does not carry a directional signal. Including
+   neu_count allows the model to distinguish days with genuinely significant news (high
+   pos or neg counts) from days with high coverage volume but low informational content.
+
+
+DERIVED FEATURE COLUMNS
+-------------------------
+
+10. pos_ratio
+
+    What it is:
+    The fraction of articles with positive sentiment: pos_ratio = pos_count / pub_count.
+    Set to 0.0 on days where pub_count = 0 (safe division). A value of 0.5 means half
+    of all articles were positive.
+
+    Why it is included:
+    The raw count pos_count is correlated with pub_count — a busy news day will naturally
+    have more positive articles even if the overall tone has not changed. pos_ratio
+    normalises by total volume, making it a more stable and cross-ticker-comparable
+    measure of the share of positive coverage. This is more useful as a model feature
+    than the raw count.
+
+11. neg_ratio
+
+    What it is:
+    The fraction of articles with negative sentiment: neg_ratio = neg_count / pub_count.
+    Set to 0.0 on days where pub_count = 0. Analogous to pos_ratio.
+
+    Why it is included:
+    Same reasoning as pos_ratio. The model benefits from the normalised ratio rather than
+    the raw count when comparing across tickers with very different average publication
+    volumes (e.g., NVDA generates far more daily articles than ORCL in recent years).
+
+12. sent_ma5
+
+    What it is:
+    The 5-day simple moving average of sent_avg, computed per ticker. Uses
+    min_periods=1 so early rows are not NaN.
+
+    Why it is included:
+    The single-day sentiment score can be noisy, particularly for tickers with low
+    article counts on a given day. A 5-day rolling average smooths out day-to-day
+    volatility in sentiment and captures the short-term sentiment trend. This is
+    deliberately aligned to the same 5-day horizon used for the forward return labels,
+    allowing the model to compare recent sentiment momentum with the prediction target.
+
+13. sent_ma10
+
+    What it is:
+    The 10-day simple moving average of sent_avg, computed per ticker.
+
+    Why it is included:
+    The 10-day average provides a medium-term sentiment baseline. The combination of
+    sent_ma5 and sent_ma10 allows the model to detect whether short-term sentiment is
+    diverging from the medium-term trend — a faster sentiment moving average crossing
+    above the slower one suggests an improving sentiment regime.
+
+14. sent_momentum
+
+    What it is:
+    The difference between the current day's sentiment and its 5-day average:
+    sent_momentum = sent_avg - sent_ma5.
+
+    Why it is included:
+    This feature captures the direction of change in sentiment, not just its level.
+    A stock with sent_avg = 0.1 and sent_ma5 = 0.05 has accelerating positive sentiment
+    (momentum = +0.05), whereas the same sent_avg with sent_ma5 = 0.2 reflects
+    decelerating or deteriorating sentiment (momentum = -0.1). Sentiment momentum has
+    been shown in academic work to predict short-horizon returns incrementally over the
+    level of sentiment alone.
+
+15. controversy
+
+    What it is:
+    A score measuring the intensity of negative coverage relative to total volume:
+    controversy = neg_count / (pub_count + 1). The +1 in the denominator avoids
+    division by zero and prevents single-article days from producing extreme values.
+
+    Why it is included:
+    Controversy captures situations where a stock is receiving disproportionate negative
+    press even on a high-volume news day. A high controversy score indicates adverse
+    events (earnings misses, regulatory actions, product recalls) that are likely to
+    suppress near-term price performance. This is a complementary signal to neg_ratio —
+    controversy also reflects the absolute scale of negative coverage, not just its
+    share.
+
+
+DATASET STATISTICS SUMMARY
+---------------------------
+Total rows      : 26,090
+Total columns   : 15
+Tickers         : 10  (AAPL, MSFT, NVDA, ORCL, CSCO, IBM, AMD, CRM, INTC, QCOM)
+Rows per ticker : 2,609  (uniform across all tickers)
+Date range      : 2015-01-01 to 2024-12-31
+NaN values      : 0  (all gaps imputed as described above)
+Data source     : Bloomberg News Sentiment Feed (US-30 Sentiment.xlsx)
+Columns dropped : All CHINESE_NEWS_* columns (data only available from 2022 onwards,
+                  incompatible with the full 2015-2024 training window)
+
+
+JOINING TO TECHNICAL DATASET
+------------------------------
+To merge sentiment features with the technical indicator dataset (technical_dataset.csv),
+join on both Ticker and Date:
+
+  merged = technical_dataset.merge(sentiment_dataset, on=['Ticker', 'Date'], how='left')
+
+A left join is used because the price dataset defines the universe of trading days. The
+sentiment dataset contains slightly more rows per ticker (2,609) than the technical
+dataset (2,485) because the sentiment data starts on 2015-01-01 whereas the technical
+dataset drops the first ~35 rows per ticker for indicator warm-up. After the left join,
+any sentiment rows that do not match a price row are discarded automatically. Residual
+NaN values in sentiment columns after the join (if any dates in the price data have no
+corresponding sentiment record) should be filled with 0.0 for sentiment scores and 0
+for count columns, consistent with the imputation strategy described above.
