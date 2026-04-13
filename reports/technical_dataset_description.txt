@@ -1,0 +1,371 @@
+DATASET DESCRIPTION: technical_dataset.csv
+==========================================
+
+
+OVERVIEW
+--------
+The dataset contains daily observations for 10 large-capitalisation US technology stocks —
+Apple (AAPL), Microsoft (MSFT), NVIDIA (NVDA), Oracle (ORCL), Cisco (CSCO), IBM (IBM),
+AMD (AMD), Salesforce (CRM), Intel (INTC), and Qualcomm (QCOM) — covering the period from
+10 February 2015 to 23 December 2024. After removing the warm-up period required by the
+slowest technical indicator (approximately 35 trading days) and the trailing five rows per
+ticker whose forward labels would require unseen future data, the dataset contains 24,850
+rows and 23 columns. Each row represents one trading day for one ticker.
+
+The data was sourced from Yahoo Finance using the yfinance Python library and uses
+split- and dividend-adjusted prices throughout all indicator calculations to ensure that
+historical signals are not distorted by corporate actions such as stock splits or dividend
+distributions.
+
+
+COLUMN REFERENCE
+----------------
+
+1. Date (Index)
+   The trading date in YYYY-MM-DD format. This is the row index of the dataset. Only
+   trading days are present; weekends and US market holidays are excluded. The date
+   represents the day on which the observation was recorded, and all features on that row
+   are constructed exclusively from data available on or before that date. No future
+   information leaks into any feature column.
+
+2. Ticker
+   The stock's exchange ticker symbol (e.g., AAPL, NVDA). All 10 tickers are present in
+   the same file. This column is essential for grouping observations by company when
+   training per-ticker models or when computing sequence windows for an LSTM — each
+   ticker's time series must be treated independently to avoid mixing price histories
+   across different companies.
+
+
+PRICE COLUMNS (RAW AND ADJUSTED)
+---------------------------------
+All price columns with the Adj_ prefix are adjusted for stock splits and dividend payments.
+These are the prices used in all technical indicator calculations. The unadjusted columns
+(Open, High, Low, Close) are retained for reference and for computing position sizes or
+entry/exit prices in a simulated trading context.
+
+3. Open
+   The unadjusted opening price of the stock on that trading day, in US dollars.
+
+4. High
+   The unadjusted intraday high price reached during that trading day.
+
+5. Low
+   The unadjusted intraday low price reached during that trading day.
+
+6. Close
+   The unadjusted closing price of the stock at market close.
+
+7. Adj_Open
+   The split- and dividend-adjusted opening price. Computed by multiplying Open by the
+   adjustment factor Adj_Close / Close. Using adjusted prices ensures that a 2-for-1 stock
+   split does not appear as a 50% price drop in the historical series and does not corrupt
+   momentum indicators computed across that date.
+
+8. Adj_High
+   The adjusted intraday high, computed analogously to Adj_Open.
+
+9. Adj_Low
+   The adjusted intraday low, computed analogously to Adj_Open.
+
+10. Adj_Close
+    The fully adjusted closing price. This is the primary price series used in all 10
+    technical indicator computations. It is the standard reference price in academic and
+    practitioner work on technical analysis because it produces a continuous, comparable
+    time series across corporate events.
+
+11. Volume
+    Raw daily trading volume (number of shares traded). Volume is not adjusted by the
+    price adjustment factor — volume ratios are self-normalising (each value is divided by
+    its own rolling mean), so the absolute scale is irrelevant and no adjustment is needed.
+
+
+TECHNICAL INDICATOR COLUMNS
+-----------------------------
+All 10 indicators are calculated independently per ticker before the tickers are
+concatenated into the final dataset. This ensures no cross-contamination occurs between
+companies. All indicators use only data available up to and including the current row
+(no look-ahead). Rows where any indicator is still in its warm-up window and would produce
+a NaN (approximately the first 35 trading days per ticker) are dropped.
+
+12. rsi_14 — Relative Strength Index (14-day)
+
+    What it is:
+    A bounded momentum oscillator ranging from 0 to 100. Values above 70 are
+    conventionally interpreted as overbought; values below 30 as oversold.
+
+    Why it is included:
+    RSI is one of the most empirically validated short-horizon momentum indicators.
+    Because it is bounded and does not require further scaling, it is particularly
+    well-suited as a machine learning feature — it cannot produce extreme outliers
+    regardless of the stock's absolute price level. It provides the model with a compact
+    signal about whether a stock has recently risen too sharply (mean reversion candidate)
+    or declined too sharply (bounce candidate).
+
+    Calculation:
+    For each day, the price change is decomposed into gains (positive changes) and losses
+    (absolute negative changes). A 14-period exponential moving average with smoothing
+    factor alpha = 1/14 (Wilder's smoothing) is applied separately to the gain series and
+    the loss series, producing average gain (AG) and average loss (AL).
+    RS = AG / AL
+    RSI = 100 - (100 / (1 + RS))
+
+13. macd_hist — MACD Histogram (12, 26, 9)
+
+    What it is:
+    The difference between the MACD line and the MACD signal line. The MACD line is the
+    difference between a 12-period and a 26-period EMA of the closing price. The signal
+    line is a 9-period EMA of the MACD line. The histogram is therefore the second
+    derivative of the price trend — it captures the rate of change of momentum rather than
+    momentum itself.
+
+    Why it is included:
+    The histogram crosses zero before the MACD line crosses its signal line, making it a
+    leading indicator of momentum shifts. For a 5-day prediction horizon, catching momentum
+    reversals early is directly valuable. Using the histogram rather than the raw MACD line
+    avoids scale dependence (the raw MACD value is proportional to the stock's absolute
+    price level, which varies enormously across tickers).
+
+    Calculation:
+    EMA_fast   = EMA(Adj_Close, span=12)
+    EMA_slow   = EMA(Adj_Close, span=26)
+    MACD_line  = EMA_fast - EMA_slow
+    Signal_line = EMA(MACD_line, span=9)
+    MACD_Histogram = MACD_line - Signal_line
+    All EMAs use adjust=False (recursive initialisation).
+
+14. roc_5 — Rate of Change (5-day)
+
+    What it is:
+    The percentage price change over the past 5 trading days.
+    ROC_5 = (Adj_Close_t / Adj_Close_{t-5}) - 1
+
+    Why it is included:
+    The forward prediction target is defined over a 5-day horizon. The 5-day backward
+    return is therefore the natural momentum feature: it tests whether the stock exhibits
+    momentum persistence (recent winners continue to win) or mean reversion (recent winners
+    give back gains). Including this feature allows the model to distinguish between these
+    two regimes. It is deliberately calibrated to match the prediction horizon rather than
+    using an arbitrary window. Values are expressed as decimals (0.03 = +3%).
+
+    Calculation:
+    ROC_5 = (Adj_Close_t / Adj_Close_{t-5}) - 1
+
+15. stoch_k — Stochastic Oscillator %K (14, 3)
+
+    What it is:
+    A bounded momentum oscillator ranging from 0 to 100 that locates the current closing
+    price relative to the recent high-low range. A value of 100 means the close is at the
+    highest high of the past 14 days; a value of 0 means it is at the lowest low.
+
+    Why it is included:
+    Unlike RSI, which is computed solely from closing prices, the Stochastic oscillator
+    incorporates the full intraday range (high and low). This gives the model information
+    about intraday volatility structure that RSI cannot provide. The two indicators are
+    complementary — RSI captures close-to-close momentum exhaustion while Stochastic
+    captures whether the close is near the boundary of recent price action. Including both
+    provides two orthogonal overbought/oversold perspectives.
+
+    Calculation:
+    Lowest_Low   = rolling minimum of Adj_Low over 14 days
+    Highest_High = rolling maximum of Adj_High over 14 days
+    Raw_%K       = 100 * (Adj_Close - Lowest_Low) / (Highest_High - Lowest_Low)
+    Stoch_%K     = 3-day simple moving average of Raw_%K  (slow stochastic, reduces noise)
+
+16. adx_14 — Average Directional Index (14-day)
+
+    What it is:
+    A non-directional trend strength indicator ranging from 0 to 100. Values above 25
+    conventionally indicate a trending market; values below 20 indicate a ranging or
+    sideways market. Crucially, ADX does not encode direction — it only measures the
+    strength of the prevailing trend.
+
+    Why it is included:
+    ADX is the only feature in the set that tells the model about the quality of the
+    market regime rather than the direction of recent price movement. Momentum signals like
+    RSI and MACD are reliable in trending markets and generate false signals in sideways
+    markets. By including ADX, the model can learn to weight momentum features more heavily
+    when ADX is high and discount them when ADX is low, effectively performing implicit
+    regime detection. This is a well-documented interaction effect in the technical analysis
+    literature.
+
+    Calculation:
+    TR      = max(Adj_High - Adj_Low, |Adj_High - PrevAdj_Close|, |Adj_Low - PrevAdj_Close|)
+    +DM     = max(Adj_High - PrevAdj_High, 0) when it exceeds -DM, else 0
+    -DM     = max(PrevAdj_Low - Adj_Low,  0) when it exceeds +DM, else 0
+    ATR     = 14-period Wilder EMA of TR
+    +DI     = 100 * EMA(+DM, 14) / ATR
+    -DI     = 100 * EMA(-DM, 14) / ATR
+    DX      = 100 * |+DI - -DI| / (+DI + -DI)
+    ADX     = 14-period Wilder EMA of DX
+
+17. atr_norm_14 — Normalised Average True Range (14-day)
+
+    What it is:
+    The Average True Range divided by the closing price, expressed as a proportion. This
+    produces a percentage measure of daily volatility that is comparable across tickers
+    with very different absolute price levels (e.g., NVDA at $800 vs CSCO at $55).
+
+    Why it is included:
+    Volatility is a first-order context variable for any directional prediction. A 1% daily
+    move in a low-volatility stock is a strong signal; the same move in a high-volatility
+    stock is noise. By including normalised ATR, the model gains access to the current
+    volatility regime for each ticker. Low-volatility consolidation periods (low ATR) are
+    historically followed by directional breakouts, which are directly relevant to 5-day
+    forward prediction. Normalising by the closing price makes this feature scale-free and
+    cross-ticker comparable.
+
+    Calculation:
+    TR       = max(Adj_High - Adj_Low, |Adj_High - PrevAdj_Close|, |Adj_Low - PrevAdj_Close|)
+    ATR      = 14-period Wilder EMA of TR
+    ATR_Norm = ATR / Adj_Close
+
+18. bb_pct_20 — Bollinger Band %B (20-day, 2 standard deviations)
+
+    What it is:
+    The position of the closing price within its 20-day Bollinger Bands, expressed as a
+    value between 0 (at the lower band) and 1 (at the upper band). Values above 1 indicate
+    the price is above the upper band; values below 0 indicate it is below the lower band.
+
+    Why it is included:
+    Unlike RSI which is purely a function of price changes, Bollinger %B is
+    volatility-adjusted — the bands expand during high-volatility periods and contract
+    during low-volatility periods. A close near the upper band means the price is extended
+    relative to its own recent volatility distribution, not just relative to a fixed
+    threshold. This makes it a more adaptive overbought/oversold indicator than RSI.
+    Including both RSI and %B provides the model with two theoretically complementary
+    signals about mean reversion pressure.
+
+    Calculation:
+    Middle_Band = 20-day simple moving average of Adj_Close
+    Std         = 20-day population standard deviation of Adj_Close (ddof=0)
+    Upper_Band  = Middle_Band + 2 * Std
+    Lower_Band  = Middle_Band - 2 * Std
+    %B          = (Adj_Close - Lower_Band) / (Upper_Band - Lower_Band)
+
+19. ema_ratio_20 — EMA Ratio (Close / EMA-20)
+
+    What it is:
+    The ratio of the current adjusted closing price to its 20-day exponential moving
+    average. A value of 1.0 means the price is exactly at its 20-day EMA; values above
+    1.0 indicate the price is above its short-term trend; values below 1.0 indicate it
+    is below.
+
+    Why it is included:
+    This is one of the simplest and most robust trend features in the ML-on-price
+    literature. By expressing price as a ratio to its trend rather than in absolute terms,
+    the feature is naturally normalised and dimensionless — it is directly comparable
+    across all 10 tickers without any further scaling. Empirically, price-to-moving-average
+    ratios consistently rank among the top features in decision tree and random forest
+    models trained on price data.
+
+    Calculation:
+    EMA_20    = 20-day exponential moving average of Adj_Close (adjust=False)
+    EMA_Ratio = Adj_Close / EMA_20
+
+20. obv_roc_5 — On-Balance Volume Rate of Change (5-day)
+
+    What it is:
+    The 5-day rate of change of the On-Balance Volume (OBV) indicator. OBV itself is a
+    running cumulative sum that adds the day's volume when the close is up and subtracts
+    it when the close is down, creating a volume-weighted directional indicator.
+
+    Why it is included:
+    Volume is the only feature in this set that is entirely independent of price direction
+    — it measures participation and conviction behind a price move. The OBV Rate of Change
+    captures whether volume momentum is accelerating in the same direction as price
+    (confirming the trend) or diverging from it (potential reversal signal). Price moves
+    accompanied by strong volume momentum are more likely to persist; price moves on
+    declining OBV are more likely to reverse. The 5-day window is deliberately aligned to
+    the prediction horizon. Using ROC rather than raw OBV removes the scale and cumulative
+    drift issues of the raw OBV series.
+
+    Calculation:
+    Direction  = sign(Adj_Close_t - Adj_Close_{t-1})   (+1, -1, or 0)
+    OBV        = cumulative sum of (Direction * Volume)
+    OBV_ROC_5  = (OBV_t / OBV_{t-5}) - 1
+
+21. vol_ratio_20 — Volume Ratio (Volume / 20-day Average Volume)
+
+    What it is:
+    Today's trading volume divided by the 20-day simple moving average of volume. A value
+    of 1.0 represents average activity; values above 2.0 indicate an unusual volume spike;
+    values below 0.5 indicate unusually thin trading.
+
+    Why it is included:
+    While OBV ROC captures cumulative volume momentum, the Volume Ratio captures single-day
+    anomalies. Abnormally high volume on a given day often coincides with institutional
+    activity, news events, or exhaustion at price extremes — all of which are directly
+    relevant to near-term price direction. This feature provides a complementary,
+    non-cumulative perspective on volume compared to OBV ROC. Because it is expressed as
+    a ratio, it is scale-free and directly comparable across tickers regardless of their
+    float or average daily volume.
+
+    Calculation:
+    Vol_MA_20  = 20-day simple moving average of Volume
+    Vol_Ratio  = Volume / Vol_MA_20
+
+
+LABEL COLUMNS
+-------------
+
+22. signal
+    A categorical string label: BUY, HOLD, or SELL. Generated by the forward_5day
+    labelling strategy described below. Used for human-readable reporting and distribution
+    analysis.
+
+23. label
+    An integer encoding of signal: BUY = 1, HOLD = 0, SELL = 2. This is the target
+    variable passed to all model training pipelines.
+
+24. fwd_ret_5d
+    The raw forward 5-day return: (Adj_Close_{t+5} / Adj_Close_t) - 1. This column is
+    NOT used as a feature during training. It is retained exclusively for post-hoc trading
+    strategy evaluation — specifically for computing the simulated cumulative return,
+    Sharpe ratio, and hit rate of the model's predictions on the held-out test set.
+
+
+LABELLING METHODOLOGY
+---------------------
+Labels are generated using the forward_5day strategy. For each trading day t:
+
+  BUY  — Adj_Close is strictly higher than Adj_Close_t on ALL FIVE of the following
+         trading days (t+1, t+2, t+3, t+4, t+5).
+
+  SELL — Adj_Close is strictly lower than Adj_Close_t on ALL FIVE of the following
+         trading days.
+
+  HOLD — All other cases (mixed direction, flat, or only partially trending).
+
+This definition is intentionally strict. Requiring all five days to be consistently above
+or below the current close selects high-confidence directional moves and reduces label
+noise compared to a single-day or net-return threshold. It aligns the label definition
+with a realistic trading rule: a BUY signal means an investor who enters at today's close
+and holds for five days will be in profit on every intermediate day, not just the final day.
+
+No look-ahead bias is introduced. The label for row t uses only prices from t+1 through
+t+5. None of the 10 feature columns use any data beyond time t. The last five rows of
+each ticker are dropped from the dataset entirely because their labels would require
+prices beyond the available data range and would be undefined.
+
+Label distribution across all 10 tickers combined:
+  HOLD : 12,805 rows  (51.5%)
+  BUY  :  7,026 rows  (28.3%)
+  SELL :  5,019 rows  (20.2%)
+
+The moderate class imbalance — particularly the under-representation of SELL relative to
+BUY — reflects the long-term upward drift of large-cap tech stocks over the 2015-2024
+period. This imbalance is addressed during model training through class-weighted loss
+functions, and model performance is evaluated using macro-averaged F1 score rather than
+accuracy alone to avoid the majority-class bias that accuracy would introduce.
+
+
+DATASET STATISTICS SUMMARY
+---------------------------
+Total rows      : 24,850
+Total columns   : 23  (plus Date index)
+Tickers         : 10  (AAPL, MSFT, NVDA, ORCL, CSCO, IBM, AMD, CRM, INTC, QCOM)
+Rows per ticker : 2,485  (uniform across all tickers)
+Date range      : 2015-02-10 to 2024-12-23
+NaN values      : 0  (all indicator warm-up rows dropped)
+Data source     : Yahoo Finance via yfinance (downloaded January 2025)
+Price basis     : Split- and dividend-adjusted throughout

@@ -1,0 +1,424 @@
+DATASET DESCRIPTION: fundamental_dataset.csv
+=============================================
+
+
+OVERVIEW
+--------
+The dataset contains daily fundamental financial metrics for 10 large-capitalisation US
+technology stocks — Apple (AAPL), Microsoft (MSFT), NVIDIA (NVDA), Oracle (ORCL),
+Cisco (CSCO), IBM (IBM), AMD (AMD), Salesforce (CRM), Intel (INTC), and Qualcomm (QCOM)
+— covering the period from 1 January 2015 to 31 December 2024. The dataset contains
+26,090 rows and 18 columns, with 2,609 business days per ticker.
+
+The raw data was sourced from US SEC EDGAR quarterly filings (10-Q and 10-K) via the
+file 02_edgar_quarterly.csv. EDGAR provides standardised XBRL-tagged financial
+statements submitted directly by companies to the SEC. Each company files four reports
+per year (three 10-Q filings and one 10-K), giving approximately 60 quarterly
+observations per ticker over the 2010–2024 period. After computing financial ratios
+from the raw statement items and forward-filling to a daily business-day frequency, the
+result is a daily feature set that reflects the most recently available published
+financials for each trading day.
+
+
+SOURCE DATA AND FILING STRUCTURE
+---------------------------------
+Source file : data/fundamental data/02_edgar_quarterly.csv
+Raw shape   : 1,803 rows (approximately 60 quarters × 10 tickers + 19 additional tickers)
+Columns     : 82 raw XBRL-tagged fields from income, balance, and cash flow statements
+
+Each row in the source file represents one quarterly filing for one company. The end_date
+field indicates the last day of the fiscal quarter covered by that filing. Because EDGAR
+filings are not available to the public on the quarter end date — companies have up to
+40 days (10-Q) or 60 days (10-K) to file — a conservative publication lag of 45 days
+was applied to all observations before forward-filling to the daily series. This means
+that a quarterly report with end_date = 2023-06-30 is considered available in the daily
+dataset starting from 2023-08-14, not from 2023-06-30. This prevents any look-ahead
+bias from financial data reaching the model before it would have been publicly available.
+
+
+REVENUE FIELD COALESCING
+-------------------------
+Different companies use different XBRL tags for their top-line revenue figure in EDGAR
+filings. To obtain a single consistent revenue series, the following priority order was
+applied: RevenueFromContractWithCustomerExcludingAssessedTax (used by most modern
+filings) → Revenues (used by older filings) → SalesRevenueNet (legacy tag). The first
+non-null value across these three fields was used for each row.
+
+
+MISSING VALUE PATTERN (STRUCTURAL)
+------------------------------------
+Some columns have structurally high NaN rates for specific tickers because those
+companies use non-standard XBRL tags that do not map to the fields extracted:
+
+  - IBM: OperatingIncomeLoss is 100% NaN because IBM historically reports operating
+    results under non-standard XBRL segment labels rather than the standard tag.
+    As a result, op_margin is fully missing for IBM.
+
+  - QCOM: GrossProfit is 100% NaN because Qualcomm does not file a gross profit line
+    item separately in their EDGAR submissions. gross_margin and fcf_margin are
+    therefore fully missing for QCOM.
+
+  - NVDA: fcf_margin is approximately 56% NaN due to inconsistent reporting of capital
+    expenditures (PaymentsToAcquirePropertyPlantAndEquipment) across filing periods.
+
+  - Other tickers show 10-30% NaN rates in individual columns, primarily from quarters
+    where specific line items were not separately disclosed.
+
+These NaNs are structural and reflect genuine gaps in EDGAR XBRL data rather than
+errors in the dataset. They are handled in the machine learning pipeline via
+column-level median imputation using the non-null values across all tickers and
+time periods. The remaining ~70-90% of data per column is complete and usable.
+
+
+FORWARD-FILL METHODOLOGY
+--------------------------
+Quarterly fundamentals are only updated four times per year. To create a daily feature
+series that can be joined to daily price and technical data, each quarterly ratio value
+is carried forward to every business day until the next quarterly filing becomes
+available. The procedure is:
+
+  1. For each quarterly observation, compute effective_date = end_date + 45 days.
+  2. Create a daily scaffold of all business days from 2015-01-01 to 2024-12-31.
+  3. For each trading day, use pandas merge_asof (backward direction) to assign the
+     most recently available quarterly filing whose effective_date is on or before
+     that trading day.
+  4. Trading days that fall before any filing's effective_date for a given ticker
+     (the very start of the series) receive NaN values.
+
+This approach ensures that the model sees only the most recent publicly available
+quarterly figures on any given day, consistent with how a real investor would have
+access to fundamental data.
+
+The end_date column in the output records which quarterly filing period the
+forward-filled values originate from, providing full traceability.
+
+
+COLUMN REFERENCE
+----------------
+
+1. Ticker
+   The stock's exchange ticker symbol. Used as the join key to other datasets.
+
+2. Date
+   The trading date (business day) in YYYY-MM-DD format. Covers 2015-01-01 to
+   2024-12-31. This is the primary join key when merging with technical_dataset.csv
+   and sentiment_dataset.csv.
+
+3. end_date
+   The fiscal quarter end date of the most recently available EDGAR filing as of
+   this Date row. For example, if Date = 2023-09-15, end_date might be 2023-06-30
+   (the Q2 filing, whose effective_date = 2023-08-14 has passed). This column is
+   not a model feature — it provides audit trail and transparency.
+
+
+PROFITABILITY RATIO COLUMNS
+-----------------------------
+
+4. gross_margin
+
+   What it is:
+   Gross profit divided by total revenue: gross_margin = GrossProfit / Revenue.
+   Represents the percentage of revenue retained after direct production costs
+   (cost of goods sold). A gross margin of 0.70 means the company retains 70 cents
+   of every dollar of revenue before operating expenses.
+
+   Why it is included:
+   Gross margin is one of the most stable and persistent fundamental quality signals
+   for technology companies. High-margin software and platform businesses (like MSFT
+   or CRM) command higher valuations and are more resilient in downturns. Changes in
+   gross margin quarter-over-quarter can signal pricing power shifts, competitive
+   pressure, or product mix changes — all of which affect near-term stock performance.
+
+   Calculation: GrossProfit / Revenue (coalesced revenue field).
+   NaN rate: Approximately 9-26% for most tickers; 78% for ORCL; 100% for QCOM.
+
+5. op_margin
+
+   What it is:
+   Operating income divided by revenue: op_margin = OperatingIncomeLoss / Revenue.
+   Captures profitability after all operating expenses (cost of revenue, R&D, SG&A)
+   but before interest and taxes.
+
+   Why it is included:
+   Operating margin reflects a company's core business efficiency independent of its
+   capital structure. For technology companies with heavy R&D spending, operating
+   margin is a key indicator of whether the company is scaling efficiently. Improvement
+   in operating margin across quarters is a strong positive signal; compression
+   indicates rising cost pressure or revenue slowdown.
+
+   Calculation: OperatingIncomeLoss / Revenue.
+   NaN rate: 10-26% for most tickers; 100% for IBM (structural, see above).
+
+6. net_margin
+
+   What it is:
+   Net income divided by revenue: net_margin = NetIncomeLoss / Revenue. The bottom-line
+   percentage of revenue that flows through to shareholders after all expenses, interest,
+   and taxes.
+
+   Why it is included:
+   Net margin is the most comprehensive measure of profitability. While it can be
+   distorted by one-time items and tax events, it remains a core valuation input and
+   is directly related to earnings per share growth. Net margin expansion typically
+   precedes positive analyst revisions and price appreciation.
+
+   Calculation: NetIncomeLoss / Revenue.
+   NaN rate: 4-26% depending on ticker.
+
+7. roa — Return on Assets (annualised)
+
+   What it is:
+   Annualised net income divided by total assets: roa = (NetIncomeLoss × 4) / Assets.
+   Measures how efficiently a company generates profit from its asset base. A value
+   of 0.15 means the company earns 15 cents for every dollar of assets annually.
+
+   Why it is included:
+   ROA normalises profitability by the size of the asset base, making it directly
+   comparable across companies with very different scales (e.g., AAPL's $345B asset
+   base vs QCOM's $28B). Rising ROA indicates improving capital efficiency; falling ROA
+   may signal over-investment in assets without commensurate profit growth.
+
+   Calculation: (NetIncomeLoss × 4) / Assets. Multiplied by 4 to annualise quarterly
+   net income. Clipped to [-5, 5] to remove extreme outliers.
+
+8. roe — Return on Equity (annualised)
+
+   What it is:
+   Annualised net income divided by stockholders' equity: roe = (NetIncomeLoss × 4)
+   / StockholdersEquity. Measures the return generated for shareholders on their
+   invested capital.
+
+   Why it is included:
+   ROE is the primary measure of shareholder value creation. High and rising ROE
+   (especially when not driven by excessive leverage) is a consistent positive
+   predictor of forward returns. For tech companies with large buyback programs, ROE
+   can be very high due to reduced equity base — including debt_ratio alongside ROE
+   allows the model to distinguish quality ROE from leverage-driven ROE.
+
+   Calculation: (NetIncomeLoss × 4) / StockholdersEquity. Clipped to [-5, 5].
+   Note: AMD had negative stockholders' equity before 2018, producing negative ROE
+   values that the clip handles.
+
+
+LEVERAGE COLUMNS
+-----------------
+
+9. debt_ratio
+
+   What it is:
+   Long-term debt divided by total assets: debt_ratio = LongTermDebt / Assets.
+   Measures the proportion of assets financed by long-term borrowings.
+
+   Why it is included:
+   The level of financial leverage affects a company's vulnerability to rising interest
+   rates, credit downgrades, and earnings volatility. For technology companies that
+   issue debt to fund buybacks (common at AAPL, MSFT), a rising debt ratio in
+   conjunction with high ROE is not necessarily negative. The model can learn this
+   nuanced interaction. Additionally, debt ratio shifts often precede credit events
+   that can sharply reprice equities.
+
+   Calculation: LongTermDebtNoncurrent / Assets (falls back to LongTermDebt if
+   noncurrent variant is unavailable). Clipped to [0, 5].
+
+10. debt_to_equity
+
+    What it is:
+    Long-term debt divided by stockholders' equity: debt_to_equity = LongTermDebt
+    / StockholdersEquity. A complementary leverage measure that shows how much debt
+    is carried per dollar of equity.
+
+    Why it is included:
+    Debt-to-equity captures leverage from the equity perspective. It is more sensitive
+    than debt_ratio when a company's equity base is shrinking (e.g., through buybacks),
+    which is common in large-cap tech. Including both debt_ratio and debt_to_equity
+    allows the model to detect these capital structure dynamics.
+
+    Calculation: LongTermDebt / StockholdersEquity. Clipped to [-5, 5].
+
+
+EFFICIENCY AND QUALITY COLUMNS
+--------------------------------
+
+11. rd_intensity
+
+    What it is:
+    Research and development expense divided by revenue: rd_intensity = R&D / Revenue.
+    Measures the fraction of revenue reinvested in future product development.
+
+    Why it is included:
+    For technology companies, R&D is the primary driver of future competitive advantage.
+    Changes in R&D intensity signal strategic shifts: a sudden increase may precede a
+    major product cycle (positive); a sharp decrease in a growth company may signal
+    cost-cutting under duress (negative). R&D intensity is also a key input in many
+    academic asset pricing models for technology stocks.
+
+    Calculation: ResearchAndDevelopmentExpense / Revenue. Clipped to [0, 5].
+    NaN rate: 10-25% for most tickers.
+
+12. fcf_margin
+
+    What it is:
+    Free cash flow margin: fcf_margin = (OperatingCashFlow - CapEx) / Revenue.
+    Measures the percentage of revenue converted to free cash available to shareholders
+    after maintaining and growing the asset base.
+
+    Why it is included:
+    Free cash flow is widely considered the most reliable measure of a company's true
+    profitability because it is harder to manipulate through accounting choices than net
+    income. High FCF margin companies have the financial flexibility to return capital
+    to shareholders (buybacks, dividends) or make strategic acquisitions, both of which
+    are positive for the stock price. FCF margin is particularly important for evaluating
+    capital-intensive semiconductor companies (NVDA, INTC, QCOM) vs. asset-light
+    software companies (CRM, MSFT).
+
+    Calculation: (NetCashProvidedByUsedInOperatingActivities -
+    PaymentsToAcquirePropertyPlantAndEquipment.abs()) / Revenue. CapEx is stored as a
+    positive payment figure and subtracted from operating cash flow. Clipped to [-5, 5].
+    NaN rate: ~25% for most tickers; 56% for NVDA; 100% for QCOM (structural).
+
+13. asset_turnover
+
+    What it is:
+    Annualised revenue divided by total assets: asset_turnover = (Revenue × 4) / Assets.
+    Measures how efficiently a company generates revenue from its asset base.
+
+    Why it is included:
+    Asset turnover distinguishes asset-intensive businesses (low turnover: semiconductor
+    fabs like INTC) from asset-light platforms (high turnover: software-as-a-service
+    companies like CRM). Combined with net margin, asset turnover forms the DuPont
+    decomposition of ROA, and declining asset turnover in a mature company can be an
+    early warning of competitive erosion or overcapitalisation.
+
+    Calculation: (Revenue × 4) / Assets. Multiplied by 4 to annualise quarterly revenue.
+    Clipped to [0, 5].
+
+
+GROWTH COLUMNS
+---------------
+
+14. rev_growth_qoq
+
+    What it is:
+    Quarter-over-quarter revenue growth: (Revenue_t / Revenue_{t-1}) - 1. Measures
+    the sequential percentage change in revenue from the previous quarter.
+
+    Why it is included:
+    Sequential growth captures the immediate momentum of a company's business. Positive
+    QoQ growth in a typically seasonal quarter, or deceleration in an historically
+    strong quarter, are both important signals. For 5-day forward prediction, QoQ
+    revenue momentum is a strong short-horizon predictor because it feeds analyst
+    estimate revisions which drive near-term price moves.
+
+    Calculation: revenue.pct_change(1) per ticker. Clipped to [-5, 5].
+    NaN rate: 0% (growth is computed before forward-filling, so first-quarter NaNs
+    from the warm-up period are resolved via the merge_asof daily expansion).
+
+15. rev_growth_yoy
+
+    What it is:
+    Year-over-year revenue growth: (Revenue_t / Revenue_{t-4}) - 1. Compares the
+    current quarter to the same quarter one year ago, removing seasonal effects.
+
+    Why it is included:
+    YoY growth is the standard benchmark reported by companies and tracked by Wall
+    Street analysts. It removes seasonal patterns (e.g., AAPL's holiday quarter is
+    always stronger than Q2) that QoQ growth cannot, providing a cleaner view of
+    underlying business trajectory. Acceleration or deceleration in YoY growth
+    are primary drivers of analyst rating changes.
+
+    Calculation: revenue.pct_change(4) per ticker. Clipped to [-5, 5].
+
+16. ni_growth_qoq
+
+    What it is:
+    Quarter-over-quarter net income growth: (NetIncome_t / NetIncome_{t-1}) - 1.
+
+    Why it is included:
+    Net income growth is more volatile than revenue growth due to operating leverage
+    and one-time items, but it directly determines EPS and therefore the denominator
+    of the P/E ratio. Rapid QoQ net income growth often leads to P/E multiple
+    expansion, which is a positive price catalyst.
+
+    Calculation: net_income.pct_change(1) per ticker. Clipped to [-5, 5].
+    NaN rate: ~1.6% (from quarters where net income crosses zero, making
+    pct_change undefined).
+
+17. ni_growth_yoy
+
+    What it is:
+    Year-over-year net income growth: (NetIncome_t / NetIncome_{t-4}) - 1. The YoY
+    analogue of ni_growth_qoq, removing seasonal effects.
+
+    Why it is included:
+    Same reasoning as rev_growth_yoy. YoY net income growth is the most commonly
+    cited earnings metric in analyst reports and earnings call commentary. It directly
+    feeds consensus EPS estimates and is a primary driver of analyst price target
+    revisions.
+
+    Calculation: net_income.pct_change(4) per ticker. Clipped to [-5, 5].
+
+18. eps_growth_yoy
+
+    What it is:
+    Year-over-year growth in diluted earnings per share: (EPS_t / EPS_{t-4}) - 1.
+    Reflects both net income growth and share count changes (buybacks reduce share
+    count, boosting EPS even if net income is flat).
+
+    Why it is included:
+    EPS is the primary metric tracked by equity analysts and the direct input to
+    forward P/E valuation. EPS growth YoY captures the combined effect of profit
+    growth and capital return programmes, making it a more shareholder-centric measure
+    than net income growth alone. Companies that grow EPS faster than net income are
+    effectively reducing their share count (a positive signal for remaining shareholders).
+
+    Calculation: eps_diluted.pct_change(4) per ticker. Clipped to [-5, 5].
+
+
+DATASET STATISTICS SUMMARY
+---------------------------
+Total rows         : 26,090
+Total columns      : 18  (Ticker, Date, end_date, 15 ratio/growth features)
+Tickers            : 10  (AAPL, MSFT, NVDA, ORCL, CSCO, IBM, AMD, CRM, INTC, QCOM)
+Rows per ticker    : 2,609  (uniform across all tickers)
+Date range         : 2015-01-01 to 2024-12-31
+Source quarters    : ~60 per ticker (2010 Q1 to 2024 Q4, quarterly cadence)
+Filing lag applied : 45 business days (no look-ahead bias)
+Data source        : US SEC EDGAR XBRL quarterly filings via 02_edgar_quarterly.csv
+Outlier clipping   : All ratio columns clipped to [-5, +5] to suppress extreme values
+                     from quarters with near-zero denominators or one-time events
+
+Approximate NaN rates by column (all tickers combined):
+  gross_margin    : ~30%  (100% QCOM, 78% ORCL, 10-26% others)
+  op_margin       : ~26%  (100% IBM, 10-26% others)
+  net_margin      : ~17%
+  roa             : ~16%
+  roe             : ~16%
+  debt_ratio      : ~15%
+  debt_to_equity  : ~15%
+  rd_intensity    : ~24%
+  fcf_margin      : ~36%  (100% QCOM, 56% NVDA, 25% others)
+  asset_turnover  : ~14%
+  rev_growth_qoq  :   0%
+  rev_growth_yoy  :   0%
+  ni_growth_qoq   :  ~2%
+  ni_growth_yoy   :  ~2%
+  eps_growth_yoy  :   0%
+
+All NaN values in model features are handled via column-level median imputation
+in the ML preprocessing pipeline (applied separately to train and test sets to
+prevent data leakage during imputation).
+
+
+JOINING TO OTHER DATASETS
+--------------------------
+To merge fundamental features with the technical and sentiment datasets, join on
+both Ticker and Date:
+
+  merged = technical_dataset.merge(fundamental_dataset[['Ticker','Date'] + RATIO_COLS],
+                                   on=['Ticker','Date'], how='left')
+  merged = merged.merge(sentiment_dataset, on=['Ticker','Date'], how='left')
+
+A left join on the technical dataset is recommended because technical_dataset.csv
+defines the universe of valid prediction dates (after removing indicator warm-up rows
+and trailing label rows). Residual NaN values after the join should be filled using
+column-level medians computed on the training set only.
