@@ -1,0 +1,158 @@
+{
+  "description": "Baseline model results. Two models evaluated on validation and test splits. Features: TA-only (10 columns). Primary metric: Macro F1.",
+  "feature_set": [
+    "rsi_14",
+    "macd_hist",
+    "roc_5",
+    "stoch_k",
+    "adx_14",
+    "atr_norm_14",
+    "bb_pct_20",
+    "ema_ratio_20",
+    "obv_roc_5",
+    "vol_ratio_20"
+  ],
+  "models": {
+    "always_hold": {
+      "validation": {
+        "accuracy": 0.5263,
+        "macro_f1": 0.2299,
+        "per_class_f1": {
+          "HOLD": 0.6896,
+          "BUY": 0.0,
+          "SELL": 0.0
+        },
+        "confusion_matrix": {
+          "pred_HOLD": {
+            "true_HOLD": 1963,
+            "true_BUY": 893,
+            "true_SELL": 874
+          },
+          "pred_BUY": {
+            "true_HOLD": 0,
+            "true_BUY": 0,
+            "true_SELL": 0
+          },
+          "pred_SELL": {
+            "true_HOLD": 0,
+            "true_BUY": 0,
+            "true_SELL": 0
+          }
+        }
+      },
+      "test": {
+        "accuracy": 0.5038,
+        "macro_f1": 0.2233,
+        "per_class_f1": {
+          "HOLD": 0.67,
+          "BUY": 0.0,
+          "SELL": 0.0
+        },
+        "confusion_matrix": {
+          "pred_HOLD": {
+            "true_HOLD": 1879,
+            "true_BUY": 1112,
+            "true_SELL": 739
+          },
+          "pred_BUY": {
+            "true_HOLD": 0,
+            "true_BUY": 0,
+            "true_SELL": 0
+          },
+          "pred_SELL": {
+            "true_HOLD": 0,
+            "true_BUY": 0,
+            "true_SELL": 0
+          }
+        }
+      }
+    },
+    "logistic_regression_ta_only": {
+      "validation": {
+        "accuracy": 0.3327,
+        "macro_f1": 0.3153,
+        "per_class_f1": {
+          "HOLD": 0.4088,
+          "BUY": 0.3097,
+          "SELL": 0.2273
+        },
+        "confusion_matrix": {
+          "pred_HOLD": {
+            "true_HOLD": 650,
+            "true_BUY": 286,
+            "true_SELL": 281
+          },
+          "pred_BUY": {
+            "true_HOLD": 857,
+            "true_BUY": 393,
+            "true_SELL": 395
+          },
+          "pred_SELL": {
+            "true_HOLD": 456,
+            "true_BUY": 214,
+            "true_SELL": 198
+          }
+        }
+      },
+      "test": {
+        "accuracy": 0.3268,
+        "macro_f1": 0.319,
+        "per_class_f1": {
+          "HOLD": 0.3861,
+          "BUY": 0.2958,
+          "SELL": 0.2751
+        },
+        "confusion_matrix": {
+          "pred_HOLD": {
+            "true_HOLD": 588,
+            "true_BUY": 362,
+            "true_SELL": 217
+          },
+          "pred_BUY": {
+            "true_HOLD": 621,
+            "true_BUY": 341,
+            "true_SELL": 232
+          },
+          "pred_SELL": {
+            "true_HOLD": 670,
+            "true_BUY": 409,
+            "true_SELL": 290
+          }
+        }
+      },
+      "top_features_per_class": {
+        "HOLD": [
+          "vol_ratio_20",
+          "rsi_14",
+          "ema_ratio_20",
+          "obv_roc_5",
+          "bb_pct_20"
+        ],
+        "BUY": [
+          "ema_ratio_20",
+          "obv_roc_5",
+          "adx_14",
+          "rsi_14",
+          "macd_hist"
+        ],
+        "SELL": [
+          "vol_ratio_20",
+          "bb_pct_20",
+          "ema_ratio_20",
+          "adx_14",
+          "obv_roc_5"
+        ]
+      }
+    }
+  },
+  "summary": {
+    "always_hold": {
+      "val_macro_f1": 0.2299,
+      "test_macro_f1": 0.2233
+    },
+    "logistic_regression_ta_only": {
+      "val_macro_f1": 0.3153,
+      "test_macro_f1": 0.319
+    }
+  }
+}
