@@ -1,0 +1,627 @@
+{
+  "description": "Two-stage experiment. Stage 1: LR vs RF vs XGBoost on full features (38 cols). Stage 2: ablation study on best model across four feature sets. Default hyperparameters used. Primary metric: Test Macro F1.",
+  "best_model_stage1": "xgboost",
+  "stage1_model_selection": {
+    "logistic_regression": {
+      "model": "logistic_regression",
+      "n_features": 38,
+      "feature_cols": [
+        "rsi_14",
+        "macd_hist",
+        "roc_5",
+        "stoch_k",
+        "adx_14",
+        "atr_norm_14",
+        "bb_pct_20",
+        "ema_ratio_20",
+        "obv_roc_5",
+        "vol_ratio_20",
+        "gross_margin",
+        "op_margin",
+        "net_margin",
+        "roa",
+        "roe",
+        "debt_ratio",
+        "debt_to_equity",
+        "rd_intensity",
+        "fcf_margin",
+        "asset_turnover",
+        "rev_growth_qoq",
+        "rev_growth_yoy",
+        "ni_growth_qoq",
+        "ni_growth_yoy",
+        "eps_growth_yoy",
+        "sent_avg",
+        "heat_pub",
+        "heat_read",
+        "pub_count",
+        "pos_count",
+        "neg_count",
+        "neu_count",
+        "pos_ratio",
+        "neg_ratio",
+        "sent_ma5",
+        "sent_ma10",
+        "sent_momentum",
+        "controversy"
+      ],
+      "validation": {
+        "accuracy": 0.3542,
+        "macro_f1": 0.317,
+        "per_class_f1": {
+          "HOLD": 0.4773,
+          "BUY": 0.2245,
+          "SELL": 0.2492
+        },
+        "confusion_matrix": {
+          "pred_HOLD": {
+            "true_HOLD": 869,
+            "true_BUY": 417,
+            "true_SELL": 392
+          },
+          "pred_BUY": {
+            "true_HOLD": 576,
+            "true_BUY": 217,
+            "true_SELL": 247
+          },
+          "pred_SELL": {
+            "true_HOLD": 518,
+            "true_BUY": 259,
+            "true_SELL": 235
+          }
+        }
+      },
+      "test": {
+        "accuracy": 0.3228,
+        "macro_f1": 0.3053,
+        "per_class_f1": {
+          "HOLD": 0.4112,
+          "BUY": 0.219,
+          "SELL": 0.2857
+        },
+        "confusion_matrix": {
+          "pred_HOLD": {
+            "true_HOLD": 656,
+            "true_BUY": 410,
+            "true_SELL": 246
+          },
+          "pred_BUY": {
+            "true_HOLD": 391,
+            "true_BUY": 203,
+            "true_SELL": 148
+          },
+          "pred_SELL": {
+            "true_HOLD": 832,
+            "true_BUY": 499,
+            "true_SELL": 345
+          }
+        }
+      }
+    },
+    "random_forest": {
+      "model": "random_forest",
+      "n_features": 38,
+      "feature_cols": [
+        "rsi_14",
+        "macd_hist",
+        "roc_5",
+        "stoch_k",
+        "adx_14",
+        "atr_norm_14",
+        "bb_pct_20",
+        "ema_ratio_20",
+        "obv_roc_5",
+        "vol_ratio_20",
+        "gross_margin",
+        "op_margin",
+        "net_margin",
+        "roa",
+        "roe",
+        "debt_ratio",
+        "debt_to_equity",
+        "rd_intensity",
+        "fcf_margin",
+        "asset_turnover",
+        "rev_growth_qoq",
+        "rev_growth_yoy",
+        "ni_growth_qoq",
+        "ni_growth_yoy",
+        "eps_growth_yoy",
+        "sent_avg",
+        "heat_pub",
+        "heat_read",
+        "pub_count",
+        "pos_count",
+        "neg_count",
+        "neu_count",
+        "pos_ratio",
+        "neg_ratio",
+        "sent_ma5",
+        "sent_ma10",
+        "sent_momentum",
+        "controversy"
+      ],
+      "validation": {
+        "accuracy": 0.3646,
+        "macro_f1": 0.3321,
+        "per_class_f1": {
+          "HOLD": 0.4777,
+          "BUY": 0.2769,
+          "SELL": 0.2416
+        },
+        "confusion_matrix": {
+          "pred_HOLD": {
+            "true_HOLD": 848,
+            "true_BUY": 394,
+            "true_SELL": 345
+          },
+          "pred_BUY": {
+            "true_HOLD": 714,
+            "true_BUY": 311,
+            "true_SELL": 328
+          },
+          "pred_SELL": {
+            "true_HOLD": 401,
+            "true_BUY": 188,
+            "true_SELL": 201
+          }
+        }
+      },
+      "test": {
+        "accuracy": 0.3308,
+        "macro_f1": 0.3188,
+        "per_class_f1": {
+          "HOLD": 0.4063,
+          "BUY": 0.2681,
+          "SELL": 0.2821
+        },
+        "confusion_matrix": {
+          "pred_HOLD": {
+            "true_HOLD": 644,
+            "true_BUY": 396,
+            "true_SELL": 251
+          },
+          "pred_BUY": {
+            "true_HOLD": 573,
+            "true_BUY": 290,
+            "true_SELL": 188
+          },
+          "pred_SELL": {
+            "true_HOLD": 662,
+            "true_BUY": 426,
+            "true_SELL": 300
+          }
+        }
+      }
+    },
+    "xgboost": {
+      "model": "xgboost",
+      "n_features": 38,
+      "feature_cols": [
+        "rsi_14",
+        "macd_hist",
+        "roc_5",
+        "stoch_k",
+        "adx_14",
+        "atr_norm_14",
+        "bb_pct_20",
+        "ema_ratio_20",
+        "obv_roc_5",
+        "vol_ratio_20",
+        "gross_margin",
+        "op_margin",
+        "net_margin",
+        "roa",
+        "roe",
+        "debt_ratio",
+        "debt_to_equity",
+        "rd_intensity",
+        "fcf_margin",
+        "asset_turnover",
+        "rev_growth_qoq",
+        "rev_growth_yoy",
+        "ni_growth_qoq",
+        "ni_growth_yoy",
+        "eps_growth_yoy",
+        "sent_avg",
+        "heat_pub",
+        "heat_read",
+        "pub_count",
+        "pos_count",
+        "neg_count",
+        "neu_count",
+        "pos_ratio",
+        "neg_ratio",
+        "sent_ma5",
+        "sent_ma10",
+        "sent_momentum",
+        "controversy"
+      ],
+      "validation": {
+        "accuracy": 0.367,
+        "macro_f1": 0.3248,
+        "per_class_f1": {
+          "HOLD": 0.4919,
+          "BUY": 0.2734,
+          "SELL": 0.2089
+        },
+        "confusion_matrix": {
+          "pred_HOLD": {
+            "true_HOLD": 900,
+            "true_BUY": 411,
+            "true_SELL": 385
+          },
+          "pred_BUY": {
+            "true_HOLD": 708,
+            "true_BUY": 305,
+            "true_SELL": 325
+          },
+          "pred_SELL": {
+            "true_HOLD": 355,
+            "true_BUY": 177,
+            "true_SELL": 164
+          }
+        }
+      },
+      "test": {
+        "accuracy": 0.3874,
+        "macro_f1": 0.3437,
+        "per_class_f1": {
+          "HOLD": 0.5173,
+          "BUY": 0.2763,
+          "SELL": 0.2375
+        },
+        "confusion_matrix": {
+          "pred_HOLD": {
+            "true_HOLD": 957,
+            "true_BUY": 532,
+            "true_SELL": 332
+          },
+          "pred_BUY": {
+            "true_HOLD": 514,
+            "true_BUY": 295,
+            "true_SELL": 214
+          },
+          "pred_SELL": {
+            "true_HOLD": 408,
+            "true_BUY": 285,
+            "true_SELL": 193
+          }
+        }
+      }
+    }
+  },
+  "stage2_ablation": {
+    "model": "xgboost",
+    "results": {
+      "ta_only": {
+        "model": "xgboost",
+        "n_features": 10,
+        "feature_cols": [
+          "rsi_14",
+          "macd_hist",
+          "roc_5",
+          "stoch_k",
+          "adx_14",
+          "atr_norm_14",
+          "bb_pct_20",
+          "ema_ratio_20",
+          "obv_roc_5",
+          "vol_ratio_20"
+        ],
+        "validation": {
+          "accuracy": 0.3416,
+          "macro_f1": 0.3156,
+          "per_class_f1": {
+            "HOLD": 0.4433,
+            "BUY": 0.2914,
+            "SELL": 0.2121
+          },
+          "confusion_matrix": {
+            "pred_HOLD": {
+              "true_HOLD": 751,
+              "true_BUY": 328,
+              "true_SELL": 346
+            },
+            "pred_BUY": {
+              "true_HOLD": 731,
+              "true_BUY": 335,
+              "true_SELL": 340
+            },
+            "pred_SELL": {
+              "true_HOLD": 481,
+              "true_BUY": 230,
+              "true_SELL": 188
+            }
+          }
+        },
+        "test": {
+          "accuracy": 0.3539,
+          "macro_f1": 0.3358,
+          "per_class_f1": {
+            "HOLD": 0.4234,
+            "BUY": 0.3289,
+            "SELL": 0.255
+          },
+          "confusion_matrix": {
+            "pred_HOLD": {
+              "true_HOLD": 690,
+              "true_BUY": 439,
+              "true_SELL": 251
+            },
+            "pred_BUY": {
+              "true_HOLD": 744,
+              "true_BUY": 420,
+              "true_SELL": 278
+            },
+            "pred_SELL": {
+              "true_HOLD": 445,
+              "true_BUY": 253,
+              "true_SELL": 210
+            }
+          }
+        }
+      },
+      "ta_sent": {
+        "model": "xgboost",
+        "n_features": 23,
+        "feature_cols": [
+          "rsi_14",
+          "macd_hist",
+          "roc_5",
+          "stoch_k",
+          "adx_14",
+          "atr_norm_14",
+          "bb_pct_20",
+          "ema_ratio_20",
+          "obv_roc_5",
+          "vol_ratio_20",
+          "sent_avg",
+          "heat_pub",
+          "heat_read",
+          "pub_count",
+          "pos_count",
+          "neg_count",
+          "neu_count",
+          "pos_ratio",
+          "neg_ratio",
+          "sent_ma5",
+          "sent_ma10",
+          "sent_momentum",
+          "controversy"
+        ],
+        "validation": {
+          "accuracy": 0.3767,
+          "macro_f1": 0.3294,
+          "per_class_f1": {
+            "HOLD": 0.5087,
+            "BUY": 0.2758,
+            "SELL": 0.2038
+          },
+          "confusion_matrix": {
+            "pred_HOLD": {
+              "true_HOLD": 950,
+              "true_BUY": 420,
+              "true_SELL": 402
+            },
+            "pred_BUY": {
+              "true_HOLD": 608,
+              "true_BUY": 289,
+              "true_SELL": 306
+            },
+            "pred_SELL": {
+              "true_HOLD": 405,
+              "true_BUY": 184,
+              "true_SELL": 166
+            }
+          }
+        },
+        "test": {
+          "accuracy": 0.3735,
+          "macro_f1": 0.3378,
+          "per_class_f1": {
+            "HOLD": 0.489,
+            "BUY": 0.2881,
+            "SELL": 0.2363
+          },
+          "confusion_matrix": {
+            "pred_HOLD": {
+              "true_HOLD": 881,
+              "true_BUY": 511,
+              "true_SELL": 332
+            },
+            "pred_BUY": {
+              "true_HOLD": 540,
+              "true_BUY": 313,
+              "true_SELL": 208
+            },
+            "pred_SELL": {
+              "true_HOLD": 458,
+              "true_BUY": 288,
+              "true_SELL": 199
+            }
+          }
+        }
+      },
+      "ta_fund": {
+        "model": "xgboost",
+        "n_features": 25,
+        "feature_cols": [
+          "rsi_14",
+          "macd_hist",
+          "roc_5",
+          "stoch_k",
+          "adx_14",
+          "atr_norm_14",
+          "bb_pct_20",
+          "ema_ratio_20",
+          "obv_roc_5",
+          "vol_ratio_20",
+          "gross_margin",
+          "op_margin",
+          "net_margin",
+          "roa",
+          "roe",
+          "debt_ratio",
+          "debt_to_equity",
+          "rd_intensity",
+          "fcf_margin",
+          "asset_turnover",
+          "rev_growth_qoq",
+          "rev_growth_yoy",
+          "ni_growth_qoq",
+          "ni_growth_yoy",
+          "eps_growth_yoy"
+        ],
+        "validation": {
+          "accuracy": 0.3389,
+          "macro_f1": 0.3189,
+          "per_class_f1": {
+            "HOLD": 0.4195,
+            "BUY": 0.3111,
+            "SELL": 0.2261
+          },
+          "confusion_matrix": {
+            "pred_HOLD": {
+              "true_HOLD": 683,
+              "true_BUY": 303,
+              "true_SELL": 307
+            },
+            "pred_BUY": {
+              "true_HOLD": 835,
+              "true_BUY": 387,
+              "true_SELL": 373
+            },
+            "pred_SELL": {
+              "true_HOLD": 445,
+              "true_BUY": 203,
+              "true_SELL": 194
+            }
+          }
+        },
+        "test": {
+          "accuracy": 0.3349,
+          "macro_f1": 0.3205,
+          "per_class_f1": {
+            "HOLD": 0.3994,
+            "BUY": 0.3145,
+            "SELL": 0.2474
+          },
+          "confusion_matrix": {
+            "pred_HOLD": {
+              "true_HOLD": 635,
+              "true_BUY": 429,
+              "true_SELL": 237
+            },
+            "pred_BUY": {
+              "true_HOLD": 726,
+              "true_BUY": 396,
+              "true_SELL": 284
+            },
+            "pred_SELL": {
+              "true_HOLD": 518,
+              "true_BUY": 287,
+              "true_SELL": 218
+            }
+          }
+        }
+      },
+      "ta_fund_sent": {
+        "model": "xgboost",
+        "n_features": 38,
+        "feature_cols": [
+          "rsi_14",
+          "macd_hist",
+          "roc_5",
+          "stoch_k",
+          "adx_14",
+          "atr_norm_14",
+          "bb_pct_20",
+          "ema_ratio_20",
+          "obv_roc_5",
+          "vol_ratio_20",
+          "gross_margin",
+          "op_margin",
+          "net_margin",
+          "roa",
+          "roe",
+          "debt_ratio",
+          "debt_to_equity",
+          "rd_intensity",
+          "fcf_margin",
+          "asset_turnover",
+          "rev_growth_qoq",
+          "rev_growth_yoy",
+          "ni_growth_qoq",
+          "ni_growth_yoy",
+          "eps_growth_yoy",
+          "sent_avg",
+          "heat_pub",
+          "heat_read",
+          "pub_count",
+          "pos_count",
+          "neg_count",
+          "neu_count",
+          "pos_ratio",
+          "neg_ratio",
+          "sent_ma5",
+          "sent_ma10",
+          "sent_momentum",
+          "controversy"
+        ],
+        "validation": {
+          "accuracy": 0.367,
+          "macro_f1": 0.3248,
+          "per_class_f1": {
+            "HOLD": 0.4919,
+            "BUY": 0.2734,
+            "SELL": 0.2089
+          },
+          "confusion_matrix": {
+            "pred_HOLD": {
+              "true_HOLD": 900,
+              "true_BUY": 411,
+              "true_SELL": 385
+            },
+            "pred_BUY": {
+              "true_HOLD": 708,
+              "true_BUY": 305,
+              "true_SELL": 325
+            },
+            "pred_SELL": {
+              "true_HOLD": 355,
+              "true_BUY": 177,
+              "true_SELL": 164
+            }
+          }
+        },
+        "test": {
+          "accuracy": 0.3874,
+          "macro_f1": 0.3437,
+          "per_class_f1": {
+            "HOLD": 0.5173,
+            "BUY": 0.2763,
+            "SELL": 0.2375
+          },
+          "confusion_matrix": {
+            "pred_HOLD": {
+              "true_HOLD": 957,
+              "true_BUY": 532,
+              "true_SELL": 332
+            },
+            "pred_BUY": {
+              "true_HOLD": 514,
+              "true_BUY": 295,
+              "true_SELL": 214
+            },
+            "pred_SELL": {
+              "true_HOLD": 408,
+              "true_BUY": 285,
+              "true_SELL": 193
+            }
+          }
+        }
+      }
+    }
+  }
+}
