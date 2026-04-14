@@ -1,0 +1,23 @@
+{
+  "source_file": "data/master_dataset.csv",
+  "total_rows": 24850,
+  "total_unique_dates": 2485,
+  "train": {
+    "n_dates": 1739,
+    "n_rows": 17390,
+    "date_start": "2015-02-10",
+    "date_end": "2022-01-04"
+  },
+  "val": {
+    "n_dates": 373,
+    "n_rows": 3730,
+    "date_start": "2022-01-05",
+    "date_end": "2023-06-30"
+  },
+  "test": {
+    "n_dates": 373,
+    "n_rows": 3730,
+    "date_start": "2023-07-03",
+    "date_end": "2024-12-23"
+  }
+}
