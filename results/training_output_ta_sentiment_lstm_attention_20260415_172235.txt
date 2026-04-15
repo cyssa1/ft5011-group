@@ -1,0 +1,43 @@
+Training on dataset: ta_sentiment
+
+------------------------------------ model: lstm_attention ------------------------------------
+Loaded data: rows=24218, columns=29, feature_count=26
+Target: label | Dataset: data/ta_sentiment.csv
+Split Summary
+------------------------
+Train: rows=16941, features=26, range=2015-02-20 -> 2022-01-25, labels={-1: 3924, 0: 8621, 1: 4396}
+Validation: rows=3629, features=26, range=2022-01-26 -> 2023-07-11, labels={-1: 830, 0: 1941, 1: 858}
+Test: rows=3648, features=26, range=2023-07-12 -> 2024-12-20, labels={-1: 860, 0: 1812, 1: 976}
+------------------------
+Sequence Summary
+------------------------
+Sequence data: train=(16641, 30, 26), validation=(3629, 30, 26), test=(3648, 30, 26), T=30
+------------------------
+Final Metrics
+------------------------
+lstm_attention:   0%|          | 0/30 [00:00<?, ?epoch/s]lstm_attention:   0%|          | 0/30 [00:11<?, ?epoch/s, train_loss=1.0967, val_f1=0.3314, val_loss=1.0796]lstm_attention:   3%|3         | 1/30 [00:11<05:37, 11.65s/epoch, train_loss=1.0967, val_f1=0.3314, val_loss=1.0796]lstm_attention:   3%|3         | 1/30 [00:22<05:37, 11.65s/epoch, train_loss=1.0832, val_f1=0.3426, val_loss=1.0828]lstm_attention:   7%|6         | 2/30 [00:22<05:17, 11.32s/epoch, train_loss=1.0832, val_f1=0.3426, val_loss=1.0828]lstm_attention:   7%|6         | 2/30 [00:33<05:17, 11.32s/epoch, train_loss=1.0814, val_f1=0.3935, val_loss=1.0856]lstm_attention:  10%|#         | 3/30 [00:33<05:02, 11.22s/epoch, train_loss=1.0814, val_f1=0.3935, val_loss=1.0856]lstm_attention:  10%|#         | 3/30 [00:45<05:02, 11.22s/epoch, train_loss=1.0836, val_f1=0.3557, val_loss=1.0766]lstm_attention:  13%|#3        | 4/30 [00:45<05:00, 11.55s/epoch, train_loss=1.0836, val_f1=0.3557, val_loss=1.0766]lstm_attention:  13%|#3        | 4/30 [00:57<05:00, 11.55s/epoch, train_loss=1.0830, val_f1=0.3723, val_loss=1.0808]lstm_attention:  17%|#6        | 5/30 [00:57<04:51, 11.65s/epoch, train_loss=1.0830, val_f1=0.3723, val_loss=1.0808]lstm_attention:  17%|#6        | 5/30 [01:08<04:51, 11.65s/epoch, train_loss=1.0810, val_f1=0.3794, val_loss=1.0819]lstm_attention:  20%|##        | 6/30 [01:08<04:36, 11.50s/epoch, train_loss=1.0810, val_f1=0.3794, val_loss=1.0819]lstm_attention:  20%|##        | 6/30 [01:19<04:36, 11.50s/epoch, train_loss=1.0817, val_f1=0.3802, val_loss=1.0826]lstm_attention:  23%|##3       | 7/30 [01:19<04:20, 11.34s/epoch, train_loss=1.0817, val_f1=0.3802, val_loss=1.0826]lstm_attention:  23%|##3       | 7/30 [01:30<04:20, 11.34s/epoch, train_loss=1.0830, val_f1=0.3606, val_loss=1.0872]lstm_attention:  27%|##6       | 8/30 [01:30<04:05, 11.17s/epoch, train_loss=1.0830, val_f1=0.3606, val_loss=1.0872]lstm_attention:  27%|##6       | 8/30 [01:41<04:05, 11.17s/epoch, train_loss=1.0805, val_f1=0.3704, val_loss=1.0906]lstm_attention:  30%|###       | 9/30 [01:41<03:51, 11.04s/epoch, train_loss=1.0805, val_f1=0.3704, val_loss=1.0906]lstm_attention:  30%|###       | 9/30 [01:52<03:51, 11.04s/epoch, train_loss=1.0839, val_f1=0.2135, val_loss=1.1013]lstm_attention:  33%|###3      | 10/30 [01:52<03:39, 10.97s/epoch, train_loss=1.0839, val_f1=0.2135, val_loss=1.1013]lstm_attention:  33%|###3      | 10/30 [02:03<03:39, 10.97s/epoch, train_loss=1.0854, val_f1=0.2768, val_loss=1.0950]                                                                                                                     
+Validation Results
+------------------
+Accuracy: 0.4456
+Macro F1: 0.3935
+Weighted F1: 0.4511
+ROC AUC (macro, OVR): 0.5873
+Confusion Matrix (rows=true, cols=pred):
+         pred_-1  pred_0  pred_1
+true_-1      251     337     242
+true_0       422    1092     427
+true_1       213     371     274
+
+Test Results
+------------
+Accuracy: 0.4241
+Macro F1: 0.3691
+Weighted F1: 0.4175
+ROC AUC (macro, OVR): 0.5679
+Confusion Matrix (rows=true, cols=pred):
+         pred_-1  pred_0  pred_1
+true_-1      375     326     159
+true_0       573    1025     214
+true_1       431     398     147
+------------------------------------ end: lstm_attention ------------------------------------
+Saved trained model to results/models/trained_model_ta_sentiment_lstm_attention.pkl

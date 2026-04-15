@@ -1,0 +1,43 @@
+Training on dataset: ta_sentiment
+
+------------------------------------ model: cnn ------------------------------------
+Loaded data: rows=24218, columns=29, feature_count=26
+Target: label | Dataset: data/ta_sentiment.csv
+Split Summary
+------------------------
+Train: rows=16941, features=26, range=2015-02-20 -> 2022-01-25, labels={-1: 3924, 0: 8621, 1: 4396}
+Validation: rows=3629, features=26, range=2022-01-26 -> 2023-07-11, labels={-1: 830, 0: 1941, 1: 858}
+Test: rows=3648, features=26, range=2023-07-12 -> 2024-12-20, labels={-1: 860, 0: 1812, 1: 976}
+------------------------
+Sequence Summary
+------------------------
+Sequence data: train=(16641, 30, 26), validation=(3629, 30, 26), test=(3648, 30, 26), T=30
+------------------------
+Final Metrics
+------------------------
+cnn:   0%|          | 0/30 [00:00<?, ?epoch/s]cnn:   0%|          | 0/30 [00:02<?, ?epoch/s, train_loss=1.0973, val_f1=0.2804, val_loss=1.1601]cnn:   3%|3         | 1/30 [00:02<01:07,  2.33s/epoch, train_loss=1.0973, val_f1=0.2804, val_loss=1.1601]cnn:   3%|3         | 1/30 [00:03<01:07,  2.33s/epoch, train_loss=1.0842, val_f1=0.2985, val_loss=1.1560]cnn:   7%|6         | 2/30 [00:03<00:45,  1.62s/epoch, train_loss=1.0842, val_f1=0.2985, val_loss=1.1560]cnn:   7%|6         | 2/30 [00:04<00:45,  1.62s/epoch, train_loss=1.0783, val_f1=0.2989, val_loss=1.1621]cnn:  10%|#         | 3/30 [00:04<00:38,  1.44s/epoch, train_loss=1.0783, val_f1=0.2989, val_loss=1.1621]cnn:  10%|#         | 3/30 [00:05<00:38,  1.44s/epoch, train_loss=1.0742, val_f1=0.3130, val_loss=1.1677]cnn:  13%|#3        | 4/30 [00:05<00:35,  1.36s/epoch, train_loss=1.0742, val_f1=0.3130, val_loss=1.1677]cnn:  13%|#3        | 4/30 [00:07<00:35,  1.36s/epoch, train_loss=1.0699, val_f1=0.3052, val_loss=1.1774]cnn:  17%|#6        | 5/30 [00:07<00:33,  1.32s/epoch, train_loss=1.0699, val_f1=0.3052, val_loss=1.1774]cnn:  17%|#6        | 5/30 [00:08<00:33,  1.32s/epoch, train_loss=1.0650, val_f1=0.3060, val_loss=1.1835]cnn:  20%|##        | 6/30 [00:08<00:30,  1.26s/epoch, train_loss=1.0650, val_f1=0.3060, val_loss=1.1835]cnn:  20%|##        | 6/30 [00:09<00:30,  1.26s/epoch, train_loss=1.0606, val_f1=0.3114, val_loss=1.1919]cnn:  23%|##3       | 7/30 [00:09<00:28,  1.24s/epoch, train_loss=1.0606, val_f1=0.3114, val_loss=1.1919]cnn:  23%|##3       | 7/30 [00:10<00:28,  1.24s/epoch, train_loss=1.0545, val_f1=0.3146, val_loss=1.2129]cnn:  27%|##6       | 8/30 [00:10<00:26,  1.22s/epoch, train_loss=1.0545, val_f1=0.3146, val_loss=1.2129]cnn:  27%|##6       | 8/30 [00:11<00:26,  1.22s/epoch, train_loss=1.0484, val_f1=0.3151, val_loss=1.2330]cnn:  30%|###       | 9/30 [00:11<00:24,  1.19s/epoch, train_loss=1.0484, val_f1=0.3151, val_loss=1.2330]cnn:  30%|###       | 9/30 [00:12<00:24,  1.19s/epoch, train_loss=1.0428, val_f1=0.3185, val_loss=1.2662]cnn:  33%|###3      | 10/30 [00:12<00:23,  1.19s/epoch, train_loss=1.0428, val_f1=0.3185, val_loss=1.2662]cnn:  33%|###3      | 10/30 [00:14<00:23,  1.19s/epoch, train_loss=1.0346, val_f1=0.3313, val_loss=1.2754]cnn:  37%|###6      | 11/30 [00:14<00:22,  1.17s/epoch, train_loss=1.0346, val_f1=0.3313, val_loss=1.2754]cnn:  37%|###6      | 11/30 [00:15<00:22,  1.17s/epoch, train_loss=1.0290, val_f1=0.3168, val_loss=1.3177]cnn:  40%|####      | 12/30 [00:15<00:20,  1.14s/epoch, train_loss=1.0290, val_f1=0.3168, val_loss=1.3177]cnn:  40%|####      | 12/30 [00:16<00:20,  1.14s/epoch, train_loss=1.0242, val_f1=0.3255, val_loss=1.3200]cnn:  43%|####3     | 13/30 [00:16<00:19,  1.14s/epoch, train_loss=1.0242, val_f1=0.3255, val_loss=1.3200]cnn:  43%|####3     | 13/30 [00:17<00:19,  1.14s/epoch, train_loss=1.0171, val_f1=0.3357, val_loss=1.3458]cnn:  47%|####6     | 14/30 [00:17<00:18,  1.13s/epoch, train_loss=1.0171, val_f1=0.3357, val_loss=1.3458]cnn:  47%|####6     | 14/30 [00:18<00:18,  1.13s/epoch, train_loss=1.0074, val_f1=0.3217, val_loss=1.3808]cnn:  50%|#####     | 15/30 [00:18<00:16,  1.12s/epoch, train_loss=1.0074, val_f1=0.3217, val_loss=1.3808]cnn:  50%|#####     | 15/30 [00:19<00:16,  1.12s/epoch, train_loss=1.0001, val_f1=0.3197, val_loss=1.4267]cnn:  53%|#####3    | 16/30 [00:19<00:15,  1.12s/epoch, train_loss=1.0001, val_f1=0.3197, val_loss=1.4267]cnn:  53%|#####3    | 16/30 [00:20<00:15,  1.12s/epoch, train_loss=0.9953, val_f1=0.3279, val_loss=1.4289]cnn:  57%|#####6    | 17/30 [00:20<00:14,  1.13s/epoch, train_loss=0.9953, val_f1=0.3279, val_loss=1.4289]cnn:  57%|#####6    | 17/30 [00:21<00:14,  1.13s/epoch, train_loss=0.9856, val_f1=0.3257, val_loss=1.4553]cnn:  60%|######    | 18/30 [00:21<00:13,  1.14s/epoch, train_loss=0.9856, val_f1=0.3257, val_loss=1.4553]cnn:  60%|######    | 18/30 [00:23<00:13,  1.14s/epoch, train_loss=0.9789, val_f1=0.3282, val_loss=1.5099]cnn:  63%|######3   | 19/30 [00:23<00:12,  1.13s/epoch, train_loss=0.9789, val_f1=0.3282, val_loss=1.5099]cnn:  63%|######3   | 19/30 [00:24<00:12,  1.13s/epoch, train_loss=0.9716, val_f1=0.3382, val_loss=1.5042]cnn:  67%|######6   | 20/30 [00:24<00:11,  1.12s/epoch, train_loss=0.9716, val_f1=0.3382, val_loss=1.5042]cnn:  67%|######6   | 20/30 [00:25<00:11,  1.12s/epoch, train_loss=0.9701, val_f1=0.3374, val_loss=1.4842]cnn:  70%|#######   | 21/30 [00:25<00:10,  1.13s/epoch, train_loss=0.9701, val_f1=0.3374, val_loss=1.4842]cnn:  70%|#######   | 21/30 [00:26<00:10,  1.13s/epoch, train_loss=0.9608, val_f1=0.3494, val_loss=1.4768]cnn:  73%|#######3  | 22/30 [00:26<00:09,  1.15s/epoch, train_loss=0.9608, val_f1=0.3494, val_loss=1.4768]cnn:  73%|#######3  | 22/30 [00:27<00:09,  1.15s/epoch, train_loss=0.9571, val_f1=0.3262, val_loss=1.5684]cnn:  77%|#######6  | 23/30 [00:27<00:08,  1.16s/epoch, train_loss=0.9571, val_f1=0.3262, val_loss=1.5684]cnn:  77%|#######6  | 23/30 [00:28<00:08,  1.16s/epoch, train_loss=0.9481, val_f1=0.3352, val_loss=1.6126]cnn:  80%|########  | 24/30 [00:28<00:06,  1.15s/epoch, train_loss=0.9481, val_f1=0.3352, val_loss=1.6126]cnn:  80%|########  | 24/30 [00:30<00:06,  1.15s/epoch, train_loss=0.9434, val_f1=0.3231, val_loss=1.8407]cnn:  83%|########3 | 25/30 [00:30<00:05,  1.16s/epoch, train_loss=0.9434, val_f1=0.3231, val_loss=1.8407]cnn:  83%|########3 | 25/30 [00:31<00:05,  1.16s/epoch, train_loss=0.9394, val_f1=0.3351, val_loss=1.7600]cnn:  87%|########6 | 26/30 [00:31<00:04,  1.18s/epoch, train_loss=0.9394, val_f1=0.3351, val_loss=1.7600]cnn:  87%|########6 | 26/30 [00:32<00:04,  1.18s/epoch, train_loss=0.9323, val_f1=0.3308, val_loss=1.9261]cnn:  90%|######### | 27/30 [00:32<00:03,  1.17s/epoch, train_loss=0.9323, val_f1=0.3308, val_loss=1.9261]cnn:  90%|######### | 27/30 [00:33<00:03,  1.17s/epoch, train_loss=0.9262, val_f1=0.3279, val_loss=1.7125]cnn:  93%|#########3| 28/30 [00:33<00:02,  1.17s/epoch, train_loss=0.9262, val_f1=0.3279, val_loss=1.7125]cnn:  93%|#########3| 28/30 [00:34<00:02,  1.17s/epoch, train_loss=0.9222, val_f1=0.3338, val_loss=1.8841]cnn:  97%|#########6| 29/30 [00:34<00:01,  1.16s/epoch, train_loss=0.9222, val_f1=0.3338, val_loss=1.8841]cnn:  97%|#########6| 29/30 [00:35<00:01,  1.16s/epoch, train_loss=0.9165, val_f1=0.3254, val_loss=1.8730]                                                                                                          
+Validation Results
+------------------
+Accuracy: 0.3659
+Macro F1: 0.3494
+Weighted F1: 0.3794
+ROC AUC (macro, OVR): 0.5279
+Confusion Matrix (rows=true, cols=pred):
+         pred_-1  pred_0  pred_1
+true_-1      373     240     217
+true_0       606     709     626
+true_1       351     261     246
+
+Test Results
+------------
+Accuracy: 0.3553
+Macro F1: 0.3366
+Weighted F1: 0.3623
+ROC AUC (macro, OVR): 0.5162
+Confusion Matrix (rows=true, cols=pred):
+         pred_-1  pred_0  pred_1
+true_-1      334     314     212
+true_0       555     721     536
+true_1       351     384     241
+------------------------------------ end: cnn ------------------------------------
+Saved trained model to results/models/trained_model_ta_sentiment_cnn.pkl

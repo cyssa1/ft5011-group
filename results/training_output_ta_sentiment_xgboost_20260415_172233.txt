@@ -2,7 +2,7 @@ Training on dataset: ta_sentiment
 
 ------------------------------------ model: xgboost ------------------------------------
 Loaded data: rows=24218, columns=29, feature_count=26
-Target: label | Dataset: data/ta-sentiment.csv
+Target: label | Dataset: data/ta_sentiment.csv
 Split Summary
 ------------------------
 Train: rows=16941, features=26, range=2015-02-20 -> 2022-01-25, labels={-1: 3924, 0: 8621, 1: 4396}
@@ -36,3 +36,4 @@ true_-1       93     711      56
 true_0       122    1623      67
 true_1       104     823      49
 ------------------------------------ end: xgboost ------------------------------------
+Saved trained model to results/models/trained_model_ta_sentiment_xgboost.pkl

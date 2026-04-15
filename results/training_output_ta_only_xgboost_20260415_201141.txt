@@ -1,0 +1,39 @@
+Training on dataset: ta_only
+
+------------------------------------ model: xgboost ------------------------------------
+Loaded data: rows=24218, columns=17, feature_count=14
+Target: label | Dataset: data/ta_only.csv
+Split Summary
+------------------------
+Train: rows=16941, features=14, range=2015-02-20 -> 2022-01-25, labels={-1: 3924, 0: 8621, 1: 4396}
+Validation: rows=3629, features=14, range=2022-01-26 -> 2023-07-11, labels={-1: 830, 0: 1941, 1: 858}
+Test: rows=3648, features=14, range=2023-07-12 -> 2024-12-20, labels={-1: 860, 0: 1812, 1: 976}
+------------------------
+Final Metrics
+------------------------
+
+Validation Results
+------------------
+Accuracy: 0.5192
+Macro F1: 0.3326
+Weighted F1: 0.4399
+ROC AUC (macro, OVR): 0.5455
+Confusion Matrix (rows=true, cols=pred):
+         pred_-1  pred_0  pred_1
+true_-1       73     637     120
+true_0        94    1704     143
+true_1        72     679     107
+
+Test Results
+------------
+Accuracy: 0.4921
+Macro F1: 0.3011
+Weighted F1: 0.3890
+ROC AUC (macro, OVR): 0.5537
+Confusion Matrix (rows=true, cols=pred):
+         pred_-1  pred_0  pred_1
+true_-1       68     716      76
+true_0        73    1657      82
+true_1        72     834      70
+------------------------------------ end: xgboost ------------------------------------
+Saved trained model to results/models/trained_model_ta_only_xgboost.pkl

@@ -1,0 +1,43 @@
+Training on dataset: all_features
+
+------------------------------------ model: lstm_attention ------------------------------------
+Loaded data: rows=24218, columns=44, feature_count=41
+Target: label | Dataset: data/all_features.csv
+Split Summary
+------------------------
+Train: rows=16941, features=41, range=2015-02-20 -> 2022-01-25, labels={-1: 3924, 0: 8621, 1: 4396}
+Validation: rows=3629, features=41, range=2022-01-26 -> 2023-07-11, labels={-1: 830, 0: 1941, 1: 858}
+Test: rows=3648, features=41, range=2023-07-12 -> 2024-12-20, labels={-1: 860, 0: 1812, 1: 976}
+------------------------
+Sequence Summary
+------------------------
+Sequence data: train=(16641, 30, 41), validation=(3629, 30, 41), test=(3648, 30, 41), T=30
+------------------------
+Final Metrics
+------------------------
+lstm_attention:   0%|                                                      | 0/30 [00:00<?, ?epoch/s]lstm_attention:   0%|   | 0/30 [00:11<?, ?epoch/s, train_loss=1.0961, val_f1=0.3110, val_loss=1.0939]lstm_attention:   3%| | 1/30 [00:11<05:33, 11.51s/epoch, train_loss=1.0961, val_f1=0.3110, val_loss=1lstm_attention:   3%| | 1/30 [00:23<05:33, 11.51s/epoch, train_loss=1.0823, val_f1=0.3426, val_loss=1lstm_attention:   7%| | 2/30 [00:23<05:27, 11.68s/epoch, train_loss=1.0823, val_f1=0.3426, val_loss=1lstm_attention:   7%| | 2/30 [00:35<05:27, 11.68s/epoch, train_loss=1.0799, val_f1=0.3473, val_loss=1lstm_attention:  10%| | 3/30 [00:35<05:20, 11.86s/epoch, train_loss=1.0799, val_f1=0.3473, val_loss=1lstm_attention:  10%| | 3/30 [00:47<05:20, 11.86s/epoch, train_loss=1.0798, val_f1=0.1804, val_loss=1lstm_attention:  13%|▏| 4/30 [00:47<05:09, 11.91s/epoch, train_loss=1.0798, val_f1=0.1804, val_loss=1lstm_attention:  13%|▏| 4/30 [00:59<05:09, 11.91s/epoch, train_loss=1.0911, val_f1=0.3440, val_loss=1lstm_attention:  17%|▏| 5/30 [00:59<04:58, 11.94s/epoch, train_loss=1.0911, val_f1=0.3440, val_loss=1lstm_attention:  17%|▏| 5/30 [01:11<04:58, 11.94s/epoch, train_loss=1.0846, val_f1=0.3355, val_loss=1lstm_attention:  20%|▏| 6/30 [01:11<04:46, 11.92s/epoch, train_loss=1.0846, val_f1=0.3355, val_loss=1lstm_attention:  20%|▏| 6/30 [01:23<04:46, 11.92s/epoch, train_loss=1.0795, val_f1=0.3044, val_loss=1lstm_attention:  23%|▏| 7/30 [01:23<04:34, 11.95s/epoch, train_loss=1.0795, val_f1=0.3044, val_loss=1lstm_attention:  23%|▏| 7/30 [01:35<04:34, 11.95s/epoch, train_loss=1.0758, val_f1=0.3504, val_loss=1lstm_attention:  27%|▎| 8/30 [01:35<04:23, 11.98s/epoch, train_loss=1.0758, val_f1=0.3504, val_loss=1lstm_attention:  27%|▎| 8/30 [01:47<04:23, 11.98s/epoch, train_loss=1.0758, val_f1=0.3495, val_loss=1lstm_attention:  30%|▎| 9/30 [01:47<04:12, 12.02s/epoch, train_loss=1.0758, val_f1=0.3495, val_loss=1lstm_attention:  30%|▎| 9/30 [01:59<04:12, 12.02s/epoch, train_loss=1.0736, val_f1=0.3428, val_loss=1lstm_attention:  33%|▎| 10/30 [01:59<04:00, 12.02s/epoch, train_loss=1.0736, val_f1=0.3428, val_loss=lstm_attention:  33%|▎| 10/30 [02:11<04:00, 12.02s/epoch, train_loss=1.0784, val_f1=0.3588, val_loss=lstm_attention:  37%|▎| 11/30 [02:11<03:49, 12.08s/epoch, train_loss=1.0784, val_f1=0.3588, val_loss=lstm_attention:  37%|▎| 11/30 [02:23<03:49, 12.08s/epoch, train_loss=1.0714, val_f1=0.3812, val_loss=lstm_attention:  40%|▍| 12/30 [02:23<03:37, 12.08s/epoch, train_loss=1.0714, val_f1=0.3812, val_loss=lstm_attention:  40%|▍| 12/30 [02:35<03:37, 12.08s/epoch, train_loss=1.0698, val_f1=0.3480, val_loss=lstm_attention:  43%|▍| 13/30 [02:35<03:25, 12.07s/epoch, train_loss=1.0698, val_f1=0.3480, val_loss=lstm_attention:  43%|▍| 13/30 [02:47<03:25, 12.07s/epoch, train_loss=1.0678, val_f1=0.3698, val_loss=lstm_attention:  47%|▍| 14/30 [02:47<03:13, 12.07s/epoch, train_loss=1.0678, val_f1=0.3698, val_loss=lstm_attention:  47%|▍| 14/30 [02:59<03:13, 12.07s/epoch, train_loss=1.0643, val_f1=0.3585, val_loss=lstm_attention:  50%|▌| 15/30 [02:59<03:01, 12.07s/epoch, train_loss=1.0643, val_f1=0.3585, val_loss=lstm_attention:  50%|▌| 15/30 [03:11<03:01, 12.07s/epoch, train_loss=1.0621, val_f1=0.3586, val_loss=lstm_attention:  53%|▌| 16/30 [03:11<02:48, 12.04s/epoch, train_loss=1.0621, val_f1=0.3586, val_loss=lstm_attention:  53%|▌| 16/30 [03:23<02:48, 12.04s/epoch, train_loss=1.0595, val_f1=0.3666, val_loss=lstm_attention:  57%|▌| 17/30 [03:23<02:36, 12.03s/epoch, train_loss=1.0595, val_f1=0.3666, val_loss=lstm_attention:  57%|▌| 17/30 [03:35<02:36, 12.03s/epoch, train_loss=1.0583, val_f1=0.3744, val_loss=lstm_attention:  60%|▌| 18/30 [03:35<02:24, 12.02s/epoch, train_loss=1.0583, val_f1=0.3744, val_loss=lstm_attention:  60%|▌| 18/30 [03:47<02:24, 12.02s/epoch, train_loss=1.0575, val_f1=0.3184, val_loss=lstm_attention:  63%|▋| 19/30 [03:47<02:12, 12.01s/epoch, train_loss=1.0575, val_f1=0.3184, val_loss=lstm_attention:  63%|▋| 19/30 [03:59<02:12, 12.01s/epoch, train_loss=1.0525, val_f1=0.3523, val_loss=                                                                                                     
+Validation Results
+------------------
+Accuracy: 0.4098
+Macro F1: 0.3812
+Weighted F1: 0.4235
+ROC AUC (macro, OVR): 0.5674
+Confusion Matrix (rows=true, cols=pred):
+         pred_-1  pred_0  pred_1
+true_-1      276     287     267
+true_0       517     885     539
+true_1       245     287     326
+
+Test Results
+------------
+Accuracy: 0.3997
+Macro F1: 0.3654
+Weighted F1: 0.4040
+ROC AUC (macro, OVR): 0.5458
+Confusion Matrix (rows=true, cols=pred):
+         pred_-1  pred_0  pred_1
+true_-1      339     333     188
+true_0       570     899     343
+true_1       388     368     220
+------------------------------------ end: lstm_attention ------------------------------------
+Saved trained model to results/models/trained_model_all_features_lstm_attention.pkl

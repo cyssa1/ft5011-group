@@ -1,0 +1,43 @@
+Training on dataset: ta_only
+
+------------------------------------ model: lstm_attention ------------------------------------
+Loaded data: rows=24218, columns=17, feature_count=14
+Target: label | Dataset: data/ta_only.csv
+Split Summary
+------------------------
+Train: rows=16941, features=14, range=2015-02-20 -> 2022-01-25, labels={-1: 3924, 0: 8621, 1: 4396}
+Validation: rows=3629, features=14, range=2022-01-26 -> 2023-07-11, labels={-1: 830, 0: 1941, 1: 858}
+Test: rows=3648, features=14, range=2023-07-12 -> 2024-12-20, labels={-1: 860, 0: 1812, 1: 976}
+------------------------
+Sequence Summary
+------------------------
+Sequence data: train=(16641, 30, 14), validation=(3629, 30, 14), test=(3648, 30, 14), T=30
+------------------------
+Final Metrics
+------------------------
+lstm_attention:   0%|                                                      | 0/30 [00:00<?, ?epoch/s]lstm_attention:   0%|   | 0/30 [00:12<?, ?epoch/s, train_loss=1.0972, val_f1=0.3247, val_loss=1.0901]lstm_attention:   3%| | 1/30 [00:12<05:58, 12.38s/epoch, train_loss=1.0972, val_f1=0.3247, val_loss=1lstm_attention:   3%| | 1/30 [00:24<05:58, 12.38s/epoch, train_loss=1.0860, val_f1=0.3373, val_loss=1lstm_attention:   7%| | 2/30 [00:24<05:41, 12.19s/epoch, train_loss=1.0860, val_f1=0.3373, val_loss=1lstm_attention:   7%| | 2/30 [00:36<05:41, 12.19s/epoch, train_loss=1.0829, val_f1=0.3807, val_loss=1lstm_attention:  10%| | 3/30 [00:36<05:26, 12.10s/epoch, train_loss=1.0829, val_f1=0.3807, val_loss=1lstm_attention:  10%| | 3/30 [00:48<05:26, 12.10s/epoch, train_loss=1.0868, val_f1=0.3939, val_loss=1lstm_attention:  13%|▏| 4/30 [00:48<05:13, 12.06s/epoch, train_loss=1.0868, val_f1=0.3939, val_loss=1lstm_attention:  13%|▏| 4/30 [01:00<05:13, 12.06s/epoch, train_loss=1.0850, val_f1=0.2848, val_loss=1lstm_attention:  17%|▏| 5/30 [01:00<05:03, 12.12s/epoch, train_loss=1.0850, val_f1=0.2848, val_loss=1lstm_attention:  17%|▏| 5/30 [01:13<05:03, 12.12s/epoch, train_loss=1.0893, val_f1=0.3997, val_loss=1lstm_attention:  20%|▏| 6/30 [01:13<04:52, 12.21s/epoch, train_loss=1.0893, val_f1=0.3997, val_loss=1lstm_attention:  20%|▏| 6/30 [01:25<04:52, 12.21s/epoch, train_loss=1.0825, val_f1=0.3631, val_loss=1lstm_attention:  23%|▏| 7/30 [01:25<04:40, 12.19s/epoch, train_loss=1.0825, val_f1=0.3631, val_loss=1lstm_attention:  23%|▏| 7/30 [01:37<04:40, 12.19s/epoch, train_loss=1.0847, val_f1=0.3763, val_loss=1lstm_attention:  27%|▎| 8/30 [01:37<04:27, 12.17s/epoch, train_loss=1.0847, val_f1=0.3763, val_loss=1lstm_attention:  27%|▎| 8/30 [01:49<04:27, 12.17s/epoch, train_loss=1.0829, val_f1=0.3737, val_loss=1lstm_attention:  30%|▎| 9/30 [01:49<04:14, 12.14s/epoch, train_loss=1.0829, val_f1=0.3737, val_loss=1lstm_attention:  30%|▎| 9/30 [02:01<04:14, 12.14s/epoch, train_loss=1.0839, val_f1=0.3634, val_loss=1lstm_attention:  33%|▎| 10/30 [02:01<04:02, 12.15s/epoch, train_loss=1.0839, val_f1=0.3634, val_loss=lstm_attention:  33%|▎| 10/30 [02:13<04:02, 12.15s/epoch, train_loss=1.0867, val_f1=0.3952, val_loss=lstm_attention:  37%|▎| 11/30 [02:13<03:51, 12.17s/epoch, train_loss=1.0867, val_f1=0.3952, val_loss=lstm_attention:  37%|▎| 11/30 [02:25<03:51, 12.17s/epoch, train_loss=1.0894, val_f1=0.2583, val_loss=lstm_attention:  40%|▍| 12/30 [02:25<03:38, 12.15s/epoch, train_loss=1.0894, val_f1=0.2583, val_loss=lstm_attention:  40%|▍| 12/30 [02:37<03:38, 12.15s/epoch, train_loss=1.0865, val_f1=0.3360, val_loss=lstm_attention:  43%|▍| 13/30 [02:37<03:26, 12.14s/epoch, train_loss=1.0865, val_f1=0.3360, val_loss=lstm_attention:  43%|▍| 13/30 [02:50<03:26, 12.14s/epoch, train_loss=1.0849, val_f1=0.2717, val_loss=                                                                                                     
+Validation Results
+------------------
+Accuracy: 0.5065
+Macro F1: 0.3997
+Weighted F1: 0.4788
+ROC AUC (macro, OVR): 0.6014
+Confusion Matrix (rows=true, cols=pred):
+         pred_-1  pred_0  pred_1
+true_-1      354     405      71
+true_0       356    1391     194
+true_1       315     450      93
+
+Test Results
+------------
+Accuracy: 0.4792
+Macro F1: 0.3820
+Weighted F1: 0.4423
+ROC AUC (macro, OVR): 0.5804
+Confusion Matrix (rows=true, cols=pred):
+         pred_-1  pred_0  pred_1
+true_-1      234     492     134
+true_0       174    1368     270
+true_1       204     626     146
+------------------------------------ end: lstm_attention ------------------------------------
+Saved trained model to results/models/trained_model_ta_only_lstm_attention.pkl

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import pickle
 from pathlib import Path
 from typing import Any
 
@@ -23,7 +24,7 @@ from tqdm import tqdm
 from xgboost import XGBClassifier
 
 
-DATA_PATH = Path("data/ta-sentiment.csv")
+DATA_PATH = Path("data/ta_sentiment.csv")
 DATE_COLUMN = "date"
 TICKER_COLUMN = "ticker"
 TARGET_COLUMN = "label"
@@ -105,6 +106,18 @@ MODEL_CONFIGS: dict[str, dict[str, Any]] = {
 
 DEFAULT_MODEL_NAME = "cnn"
 DEFAULT_SEQUENCE_LENGTH = 30
+
+
+def resolve_dataset_path(data_set: str | Path) -> Path:
+    """Resolve dataset names like 'ta_sentiment' into data/<name>.csv paths."""
+    if isinstance(data_set, Path):
+        return data_set
+    data_set_str = str(data_set)
+    if data_set_str.endswith(".csv"):
+        if "/" in data_set_str:
+            return Path(data_set_str)
+        return Path("data") / data_set_str
+    return Path("data") / f"{data_set_str}.csv"
 
 
 def load_data(file_path: Path = DATA_PATH) -> pd.DataFrame:
@@ -243,6 +256,7 @@ def build_grouped_sequence_windows(
     grouped_sequences: list[np.ndarray] = []
     grouped_targets: list[np.ndarray] = []
     grouped_dates: list[np.ndarray] = []
+    grouped_tickers: list[np.ndarray] = []
     ticker_series = tickers.reset_index(drop=True)
     date_series = pd.to_datetime(dates).reset_index(drop=True)
     history_by_ticker = history_by_ticker or {}
@@ -275,6 +289,9 @@ def build_grouped_sequence_windows(
             grouped_sequences.append(ticker_windows["X"])
             grouped_targets.append(ticker_windows["y"])
             grouped_dates.append(ticker_windows["dates"])
+            grouped_tickers.append(
+                np.full(len(ticker_windows["y"]), ticker, dtype=object)
+            )
 
     num_features = X_values.shape[1]
     if grouped_sequences:
@@ -282,11 +299,13 @@ def build_grouped_sequence_windows(
             "X": np.concatenate(grouped_sequences, axis=0),
             "y": np.concatenate(grouped_targets, axis=0),
             "dates": np.concatenate(grouped_dates, axis=0),
+            "tickers": np.concatenate(grouped_tickers, axis=0),
         }
     return {
         "X": np.empty((0, sequence_length, num_features), dtype=np.float32),
         "y": np.empty((0,), dtype=np.int64),
         "dates": np.empty((0,), dtype="datetime64[ns]"),
+        "tickers": np.empty((0,), dtype=object),
     }
 
 
@@ -423,11 +442,13 @@ def group_sequences_by_date(sequence_split: dict[str, np.ndarray]) -> list[dict[
     """Group prepared sequence samples into per-day cross sections."""
     grouped_days: list[dict[str, Any]] = []
     dates = pd.to_datetime(sequence_split["dates"])
+    tickers = np.asarray(sequence_split["tickers"], dtype=object)
 
     for date in pd.Index(dates).unique().sort_values():
         date_mask = np.asarray(dates == date)
         X_day = sequence_split["X"][date_mask]
         y_day = sequence_split["y"][date_mask]
+        tickers_day = tickers[date_mask]
         if len(X_day) == 0:
             continue
         grouped_days.append(
@@ -435,6 +456,7 @@ def group_sequences_by_date(sequence_split: dict[str, np.ndarray]) -> list[dict[
                 "date": str(pd.Timestamp(date).date()),
                 "X": X_day,
                 "y": y_day,
+                "tickers": tickers_day,
             }
         )
 
@@ -546,6 +568,50 @@ class LSTMAttentionClassifier(nn.Module):
         return self.classifier(attended)
 
 
+def get_inference_device() -> torch.device:
+    """Choose the device used for sequence inference and evaluation."""
+    if torch.backends.mps.is_available():
+        return torch.device("mps")
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    return torch.device("cpu")
+
+
+def build_sequence_model(
+    model_name: str,
+    num_features: int,
+    num_classes: int,
+    config: dict[str, Any],
+) -> nn.Module:
+    """Instantiate one supported sequence model from saved configuration."""
+    if model_name == "cnn":
+        return CNNClassifier(
+            input_size=num_features,
+            num_classes=num_classes,
+            conv_channels=config["conv_channels"],
+            kernel_size=config["kernel_size"],
+            dropout=config["dropout"],
+        )
+    if model_name in {"lstm", "lstm_ic"}:
+        return LSTMClassifier(
+            input_size=num_features,
+            hidden_size=config["hidden_size"],
+            num_layers=config["num_layers"],
+            num_classes=num_classes,
+            dropout=config["dropout"],
+        )
+    if model_name == "lstm_attention":
+        return LSTMAttentionClassifier(
+            input_size=num_features,
+            hidden_size=config["hidden_size"],
+            num_layers=config["num_layers"],
+            num_classes=num_classes,
+            attention_heads=config["attention_heads"],
+            dropout=config["dropout"],
+        )
+    raise NotImplementedError(f"Sequence model '{model_name}' is not implemented.")
+
+
 def build_sequence_dataloaders(
     sequence_bundle: dict[str, Any],
     batch_size: int,
@@ -588,6 +654,105 @@ def build_day_grouped_dataloaders(sequence_bundle: dict[str, Any]) -> dict[str, 
             shuffle=False,
         )
         for split in ("train", "validation", "test")
+    }
+
+
+def prepare_sequence_data_with_fitted_preprocessors(
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    dates_train: pd.Series,
+    tickers_train: pd.Series,
+    X_val: pd.DataFrame,
+    y_val: pd.Series,
+    dates_val: pd.Series,
+    tickers_val: pd.Series,
+    X_test: pd.DataFrame,
+    y_test: pd.Series,
+    dates_test: pd.Series,
+    tickers_test: pd.Series,
+    *,
+    feature_names: list[str],
+    imputer: SimpleImputer,
+    scaler: StandardScaler,
+    label_encoder: LabelEncoder,
+    sequence_length: int,
+) -> dict[str, Any]:
+    """Rebuild sequence splits using saved preprocessing objects."""
+
+    def _scale(X: pd.DataFrame) -> np.ndarray:
+        X_num = X[feature_names].replace([np.inf, -np.inf], np.nan)
+        X_imp = imputer.transform(X_num)
+        X_scl = scaler.transform(X_imp)
+        return X_scl.astype(np.float32)
+
+    X_train_scaled = _scale(X_train)
+    X_val_scaled = _scale(X_val)
+    X_test_scaled = _scale(X_test)
+
+    y_train_enc = label_encoder.transform(y_train).astype(np.int64)
+    y_val_enc = label_encoder.transform(y_val).astype(np.int64)
+    y_test_enc = label_encoder.transform(y_test).astype(np.int64)
+
+    def _tail_history(
+        X_arr: np.ndarray,
+        y_arr: np.ndarray,
+        date_arr: np.ndarray,
+        ticker_series: pd.Series,
+    ) -> dict[str, dict[str, np.ndarray]]:
+        series = ticker_series.reset_index(drop=True)
+        return {
+            ticker: {
+                "X": X_arr[(series == ticker).to_numpy()][-sequence_length:],
+                "y": y_arr[(series == ticker).to_numpy()][-sequence_length:],
+                "dates": date_arr[(series == ticker).to_numpy()][-sequence_length:],
+            }
+            for ticker in series.unique()
+        }
+
+    train_sequences = build_grouped_sequence_windows(
+        X_values=X_train_scaled,
+        y_values=y_train_enc,
+        dates=dates_train,
+        tickers=tickers_train,
+        sequence_length=sequence_length,
+    )
+    val_sequences = build_grouped_sequence_windows(
+        X_values=X_val_scaled,
+        y_values=y_val_enc,
+        dates=dates_val,
+        tickers=tickers_val,
+        sequence_length=sequence_length,
+        history_by_ticker=_tail_history(
+            X_train_scaled,
+            y_train_enc,
+            pd.to_datetime(dates_train).to_numpy(dtype="datetime64[ns]"),
+            tickers_train,
+        ),
+    )
+    test_sequences = build_grouped_sequence_windows(
+        X_values=X_test_scaled,
+        y_values=y_test_enc,
+        dates=dates_test,
+        tickers=tickers_test,
+        sequence_length=sequence_length,
+        history_by_ticker=_tail_history(
+            np.concatenate([X_train_scaled, X_val_scaled], axis=0),
+            np.concatenate([y_train_enc, y_val_enc], axis=0),
+            pd.concat([dates_train, dates_val], ignore_index=True).to_numpy(dtype="datetime64[ns]"),
+            pd.concat([tickers_train, tickers_val], ignore_index=True),
+        ),
+    )
+
+    return {
+        "train": train_sequences,
+        "validation": val_sequences,
+        "test": test_sequences,
+        "feature_names": feature_names,
+        "num_features": len(feature_names),
+        "sequence_length": sequence_length,
+        "label_encoder": label_encoder,
+        "imputer": imputer,
+        "scaler": scaler,
     }
 
 
@@ -956,6 +1121,251 @@ def train_model(
     raise NotImplementedError(f"Model family '{family}' is not implemented.")
 
 
+def build_model_artifact(
+    model_bundle: dict[str, Any],
+    *,
+    data_set: str,
+    sequence_bundle: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Create a pickle-friendly artifact for later inference/backtesting."""
+    dataset_key = Path(str(data_set)).stem
+    artifact: dict[str, Any] = {
+        "family": model_bundle["family"],
+        "model_name": model_bundle["model_name"],
+        "data_set": dataset_key,
+        "target_column": TARGET_COLUMN,
+    }
+
+    if model_bundle["family"] == "xgboost":
+        artifact["model"] = model_bundle["model"]
+        artifact["label_encoder"] = model_bundle["label_encoder"]
+        return artifact
+
+    artifact.update(
+        {
+            "label_encoder": model_bundle["label_encoder"],
+            "sequence_length": sequence_bundle["sequence_length"],
+            "feature_names": sequence_bundle["feature_names"],
+            "imputer": sequence_bundle["imputer"],
+            "scaler": sequence_bundle["scaler"],
+            "model_params": copy.deepcopy(MODEL_CONFIGS[model_bundle["model_name"]]["params"]),
+            "model_state_dict": {
+                key: value.detach().cpu()
+                for key, value in model_bundle["model"].state_dict().items()
+            },
+            "num_features": sequence_bundle["num_features"],
+            "num_classes": len(sequence_bundle["label_encoder"].classes_),
+        }
+    )
+    return artifact
+
+
+def save_model_artifact(artifact: dict[str, Any], output_path: Path) -> Path:
+    """Persist a trained model artifact as a pickle file."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("wb") as file_obj:
+        pickle.dump(artifact, file_obj)
+    return output_path
+
+
+def load_model_artifact(model_path: Path) -> dict[str, Any]:
+    """Load one previously saved pickle artifact."""
+    with model_path.open("rb") as file_obj:
+        return pickle.load(file_obj)
+
+
+def load_data_bundle(file_path: Path) -> dict[str, Any]:
+    """Load, split, and package one dataset for downstream inference."""
+    df = load_data(file_path=file_path)
+    X, y, dates, tickers = prepare_features(df)
+    (
+        X_train, y_train, dates_train, tickers_train,
+        X_val, y_val, dates_val, tickers_val,
+        X_test, y_test, dates_test, tickers_test,
+    ) = split_data(X, y, dates, tickers)
+    return {
+        "df": df,
+        "X": X,
+        "y": y,
+        "dates": dates,
+        "tickers": tickers,
+        "X_train": X_train,
+        "y_train": y_train,
+        "dates_train": dates_train,
+        "tickers_train": tickers_train,
+        "X_val": X_val,
+        "y_val": y_val,
+        "dates_val": dates_val,
+        "tickers_val": tickers_val,
+        "X_test": X_test,
+        "y_test": y_test,
+        "dates_test": dates_test,
+        "tickers_test": tickers_test,
+    }
+
+
+def restore_model_bundle_from_artifact(artifact: dict[str, Any]) -> dict[str, Any]:
+    """Rebuild a trained model bundle from a saved artifact."""
+    if artifact["family"] == "xgboost":
+        return {
+            "family": "xgboost",
+            "model_name": artifact["model_name"],
+            "model": artifact["model"],
+            "label_encoder": artifact["label_encoder"],
+        }
+
+    device = get_inference_device()
+    model = build_sequence_model(
+        model_name=artifact["model_name"],
+        num_features=artifact["num_features"],
+        num_classes=artifact["num_classes"],
+        config=artifact["model_params"],
+    ).to(device)
+    model.load_state_dict(artifact["model_state_dict"])
+    model.eval()
+    criterion = None
+    if artifact["model_name"] != "lstm_ic":
+        y_classes = artifact["label_encoder"].classes_
+        class_weights = np.ones(len(y_classes), dtype=np.float32)
+        criterion = nn.CrossEntropyLoss(
+            weight=torch.tensor(class_weights, dtype=torch.float32, device=device)
+        )
+
+    return {
+        "family": "pytorch",
+        "model_name": artifact["model_name"],
+        "model": model,
+        "device": device,
+        "criterion": criterion,
+        "label_encoder": artifact["label_encoder"],
+    }
+
+
+def build_prediction_frame(
+    *,
+    dates: np.ndarray,
+    tickers: np.ndarray,
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    y_score: np.ndarray,
+    labels: np.ndarray,
+) -> pd.DataFrame:
+    """Build a row-level prediction table with class probabilities."""
+    prediction_df = pd.DataFrame(
+        {
+            "date": pd.to_datetime(dates),
+            "ticker": np.asarray(tickers, dtype=object),
+            "y_true": y_true,
+            "y_pred": y_pred,
+        }
+    )
+    for class_index, label in enumerate(labels):
+        prediction_df[f"prob_{label}"] = y_score[:, class_index]
+    if 1 in labels and -1 in labels:
+        pos_col = f"prob_{1}"
+        neg_col = f"prob_{-1}"
+        prediction_df["signal_score"] = prediction_df[pos_col] - prediction_df[neg_col]
+    return prediction_df
+
+
+def predict_test_split_from_artifact(artifact: dict[str, Any]) -> pd.DataFrame:
+    """Load the saved dataset configuration and return row-level test predictions."""
+    data_bundle = load_data_bundle(resolve_dataset_path(artifact["data_set"]))
+    model_bundle = restore_model_bundle_from_artifact(artifact)
+    label_encoder: LabelEncoder = artifact["label_encoder"]
+    labels = label_encoder.classes_
+
+    if artifact["family"] == "xgboost":
+        model = model_bundle["model"]
+        y_score = model.predict_proba(data_bundle["X_test"])
+        y_pred = label_encoder.inverse_transform(model.predict(data_bundle["X_test"]).astype(int))
+        return build_prediction_frame(
+            dates=data_bundle["dates_test"].to_numpy(),
+            tickers=data_bundle["tickers_test"].to_numpy(),
+            y_true=data_bundle["y_test"].to_numpy(),
+            y_pred=y_pred,
+            y_score=y_score,
+            labels=labels,
+        )
+
+    sequence_bundle = prepare_sequence_data_with_fitted_preprocessors(
+        X_train=data_bundle["X_train"],
+        y_train=data_bundle["y_train"],
+        dates_train=data_bundle["dates_train"],
+        tickers_train=data_bundle["tickers_train"],
+        X_val=data_bundle["X_val"],
+        y_val=data_bundle["y_val"],
+        dates_val=data_bundle["dates_val"],
+        tickers_val=data_bundle["tickers_val"],
+        X_test=data_bundle["X_test"],
+        y_test=data_bundle["y_test"],
+        dates_test=data_bundle["dates_test"],
+        tickers_test=data_bundle["tickers_test"],
+        feature_names=artifact["feature_names"],
+        imputer=artifact["imputer"],
+        scaler=artifact["scaler"],
+        label_encoder=label_encoder,
+        sequence_length=artifact["sequence_length"],
+    )
+
+    model_name = artifact["model_name"]
+    if model_name == "lstm_ic":
+        dataloader = build_sequence_dataloaders(
+            sequence_bundle,
+            batch_size=artifact["model_params"]["batch_size"],
+        )["test"]
+        label_values = torch.tensor(labels, dtype=torch.float32, device=model_bundle["device"])
+        metrics = run_lstm_ic_epoch(
+            model=model_bundle["model"],
+            dataloader=dataloader,
+            device=model_bundle["device"],
+            label_values=label_values,
+        )
+        dates = sequence_bundle["test"]["dates"]
+        tickers = sequence_bundle["test"]["tickers"]
+    elif model_name == "lstm_attention":
+        dataloader = build_day_grouped_dataloaders(sequence_bundle)["test"]
+        metrics = run_attention_epoch(
+            model=model_bundle["model"],
+            dataloader=dataloader,
+            criterion=nn.CrossEntropyLoss(),
+            device=model_bundle["device"],
+        )
+        grouped_days = group_sequences_by_date(sequence_bundle["test"])
+        dates = np.concatenate(
+            [
+                np.full(len(day["tickers"]), np.datetime64(day["date"]))
+                for day in grouped_days
+            ],
+            axis=0,
+        )
+        tickers = np.concatenate([day["tickers"] for day in grouped_days], axis=0)
+    else:
+        dataloader = build_sequence_dataloaders(
+            sequence_bundle,
+            batch_size=artifact["model_params"]["batch_size"],
+        )["test"]
+        metrics = run_sequence_epoch(
+            model=model_bundle["model"],
+            dataloader=dataloader,
+            criterion=nn.CrossEntropyLoss(),
+            device=model_bundle["device"],
+        )
+        dates = sequence_bundle["test"]["dates"]
+        tickers = sequence_bundle["test"]["tickers"]
+
+    y_true = label_encoder.inverse_transform(metrics["y_true"].astype(int))
+    y_pred = label_encoder.inverse_transform(metrics["y_pred"].astype(int))
+    return build_prediction_frame(
+        dates=dates,
+        tickers=tickers,
+        y_true=y_true,
+        y_pred=y_pred,
+        y_score=metrics["y_score"],
+        labels=labels,
+    )
+
+
 def print_classification_metrics(
     split_name: str,
     y_true: np.ndarray | pd.Series,
@@ -1003,13 +1413,13 @@ def print_split_summary(
     )
 
 
-def print_run_header(model_name: str, df: pd.DataFrame, X: pd.DataFrame) -> None:
+def print_run_header(model_name: str, df: pd.DataFrame, X: pd.DataFrame, dataset_path: Path) -> None:
     """Print a compact header for one model run."""
     line = "-" * 36
     print()
     print(f"{line} model: {model_name} {line}")
     print(f"Loaded data: rows={len(df)}, columns={len(df.columns)}, feature_count={X.shape[1]}")
-    print(f"Target: {TARGET_COLUMN} | Dataset: {DATA_PATH}")
+    print(f"Target: {TARGET_COLUMN} | Dataset: {dataset_path}")
 
 
 def print_run_footer(model_name: str) -> None:
@@ -1089,9 +1499,14 @@ def evaluate_model(
     raise NotImplementedError(f"Evaluation for model family '{family}' is not implemented.")
 
 
-def main(model_name: str = DEFAULT_MODEL_NAME, data_set = DATA_PATH) -> None:
+def main(
+    model_name: str = DEFAULT_MODEL_NAME,
+    data_set: str | Path = DATA_PATH.stem,
+    return_run_bundle: bool = False,
+) -> dict[str, Any] | None:
     """Run the multiclass training pipeline on the technical dataset."""
-    df = load_data(file_path = Path(f"data/{data_set}.csv"))
+    dataset_path = resolve_dataset_path(data_set)
+    df = load_data(file_path=dataset_path)
     X, y, dates, tickers = prepare_features(df)
     (
         X_train, y_train, dates_train, tickers_train,
@@ -1099,7 +1514,7 @@ def main(model_name: str = DEFAULT_MODEL_NAME, data_set = DATA_PATH) -> None:
         X_test, y_test, dates_test, tickers_test,
     ) = split_data(X, y, dates, tickers)
 
-    print_run_header(model_name=model_name, df=df, X=X)
+    print_run_header(model_name=model_name, df=df, X=X, dataset_path=dataset_path)
     print("Split Summary")
     print("-" * 24)
     print_split_summary("Train", X_train, y_train, dates_train)
@@ -1140,6 +1555,28 @@ def main(model_name: str = DEFAULT_MODEL_NAME, data_set = DATA_PATH) -> None:
         sequence_bundle=sequence_bundle,
     )
     print_run_footer(model_name=model_name)
+    if return_run_bundle:
+        return {
+            "data_set": str(data_set),
+            "model_bundle": model,
+            "sequence_bundle": sequence_bundle,
+            "data_bundle": {
+                "df": df,
+                "X_train": X_train,
+                "y_train": y_train,
+                "dates_train": dates_train,
+                "tickers_train": tickers_train,
+                "X_val": X_val,
+                "y_val": y_val,
+                "dates_val": dates_val,
+                "tickers_val": tickers_val,
+                "X_test": X_test,
+                "y_test": y_test,
+                "dates_test": dates_test,
+                "tickers_test": tickers_test,
+            },
+        }
+    return None
 
 
 if __name__ == "__main__":

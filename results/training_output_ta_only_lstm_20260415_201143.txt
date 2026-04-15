@@ -1,0 +1,43 @@
+Training on dataset: ta_only
+
+------------------------------------ model: lstm ------------------------------------
+Loaded data: rows=24218, columns=17, feature_count=14
+Target: label | Dataset: data/ta_only.csv
+Split Summary
+------------------------
+Train: rows=16941, features=14, range=2015-02-20 -> 2022-01-25, labels={-1: 3924, 0: 8621, 1: 4396}
+Validation: rows=3629, features=14, range=2022-01-26 -> 2023-07-11, labels={-1: 830, 0: 1941, 1: 858}
+Test: rows=3648, features=14, range=2023-07-12 -> 2024-12-20, labels={-1: 860, 0: 1812, 1: 976}
+------------------------
+Sequence Summary
+------------------------
+Sequence data: train=(16641, 30, 14), validation=(3629, 30, 14), test=(3648, 30, 14), T=30
+------------------------
+Final Metrics
+------------------------
+lstm:   0%|                                                                | 0/30 [00:00<?, ?epoch/s]lstm:   0%|             | 0/30 [00:01<?, ?epoch/s, train_loss=1.0972, val_f1=0.3855, val_loss=1.0848]lstm:   3%|▏    | 1/30 [00:01<00:48,  1.68s/epoch, train_loss=1.0972, val_f1=0.3855, val_loss=1.0848]lstm:   3%|▏    | 1/30 [00:02<00:48,  1.68s/epoch, train_loss=1.0927, val_f1=0.3618, val_loss=1.0816]lstm:   7%|▎    | 2/30 [00:02<00:41,  1.47s/epoch, train_loss=1.0927, val_f1=0.3618, val_loss=1.0816]lstm:   7%|▎    | 2/30 [00:04<00:41,  1.47s/epoch, train_loss=1.0903, val_f1=0.3672, val_loss=1.0805]lstm:  10%|▌    | 3/30 [00:04<00:37,  1.39s/epoch, train_loss=1.0903, val_f1=0.3672, val_loss=1.0805]lstm:  10%|▌    | 3/30 [00:05<00:37,  1.39s/epoch, train_loss=1.0877, val_f1=0.3639, val_loss=1.0802]lstm:  13%|▋    | 4/30 [00:05<00:35,  1.36s/epoch, train_loss=1.0877, val_f1=0.3639, val_loss=1.0802]lstm:  13%|▋    | 4/30 [00:06<00:35,  1.36s/epoch, train_loss=1.0859, val_f1=0.3617, val_loss=1.0818]lstm:  17%|▊    | 5/30 [00:06<00:34,  1.36s/epoch, train_loss=1.0859, val_f1=0.3617, val_loss=1.0818]lstm:  17%|▊    | 5/30 [00:08<00:34,  1.36s/epoch, train_loss=1.0843, val_f1=0.3652, val_loss=1.0837]lstm:  20%|█    | 6/30 [00:08<00:32,  1.37s/epoch, train_loss=1.0843, val_f1=0.3652, val_loss=1.0837]lstm:  20%|█    | 6/30 [00:09<00:32,  1.37s/epoch, train_loss=1.0847, val_f1=0.3505, val_loss=1.0855]lstm:  23%|█▏   | 7/30 [00:09<00:31,  1.38s/epoch, train_loss=1.0847, val_f1=0.3505, val_loss=1.0855]lstm:  23%|█▏   | 7/30 [00:11<00:31,  1.38s/epoch, train_loss=1.0834, val_f1=0.3519, val_loss=1.0869]lstm:  27%|█▎   | 8/30 [00:11<00:29,  1.34s/epoch, train_loss=1.0834, val_f1=0.3519, val_loss=1.0869]lstm:  27%|█▎   | 8/30 [00:12<00:29,  1.34s/epoch, train_loss=1.0815, val_f1=0.3653, val_loss=1.0856]                                                                                                     
+Validation Results
+------------------
+Accuracy: 0.4842
+Macro F1: 0.3855
+Weighted F1: 0.4644
+ROC AUC (macro, OVR): 0.5689
+Confusion Matrix (rows=true, cols=pred):
+         pred_-1  pred_0  pred_1
+true_-1      153     465     212
+true_0       307    1369     265
+true_1       155     468     235
+
+Test Results
+------------
+Accuracy: 0.4742
+Macro F1: 0.3177
+Weighted F1: 0.3971
+ROC AUC (macro, OVR): 0.5403
+Confusion Matrix (rows=true, cols=pred):
+         pred_-1  pred_0  pred_1
+true_-1      127     641      92
+true_0       196    1532      84
+true_1       151     754      71
+------------------------------------ end: lstm ------------------------------------
+Saved trained model to results/models/trained_model_ta_only_lstm.pkl

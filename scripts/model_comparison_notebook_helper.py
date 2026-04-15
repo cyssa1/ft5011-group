@@ -13,8 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 import sys
 
-if str(ROOT / "src" / "models") not in sys.path:
-    sys.path.append(str(ROOT / "src" / "models"))
+if str(ROOT / "scripts") not in sys.path:
+    sys.path.append(str(ROOT / "scripts"))
 
 import model_training as mt
 
@@ -280,6 +280,89 @@ def run_model_comparison(
 
     summary_df = pd.DataFrame(summary_records).reset_index(drop=True)
     return summary_df, artifacts, data_bundle, sequence_bundle
+
+
+def build_sequence_bundle_from_artifact(
+    artifact: dict[str, Any],
+    data_bundle: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Rebuild sequence data using preprocessing saved inside one artifact."""
+    if artifact["family"] != "pytorch":
+        return None
+
+    return mt.prepare_sequence_data_with_fitted_preprocessors(
+        X_train=data_bundle["X_train"],
+        y_train=data_bundle["y_train"],
+        dates_train=data_bundle["dates_train"],
+        tickers_train=data_bundle["tickers_train"],
+        X_val=data_bundle["X_val"],
+        y_val=data_bundle["y_val"],
+        dates_val=data_bundle["dates_val"],
+        tickers_val=data_bundle["tickers_val"],
+        X_test=data_bundle["X_test"],
+        y_test=data_bundle["y_test"],
+        dates_test=data_bundle["dates_test"],
+        tickers_test=data_bundle["tickers_test"],
+        feature_names=artifact["feature_names"],
+        imputer=artifact["imputer"],
+        scaler=artifact["scaler"],
+        label_encoder=artifact["label_encoder"],
+        sequence_length=artifact["sequence_length"],
+    )
+
+
+def run_saved_model_comparison(
+    model_paths: dict[str, Path | str],
+) -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any], dict[str, Any] | None]:
+    """Load saved model artifacts, evaluate them, and return notebook-ready objects."""
+    summary_records: list[dict[str, Any]] = []
+    artifacts: dict[str, Any] = {}
+    data_bundle_cache: dict[str, dict[str, Any]] = {}
+    primary_data_bundle: dict[str, Any] | None = None
+    primary_sequence_bundle: dict[str, Any] | None = None
+
+    for display_name, model_path in model_paths.items():
+        artifact = mt.load_model_artifact(Path(model_path))
+        dataset_key = artifact["data_set"]
+
+        if dataset_key not in data_bundle_cache:
+            data_bundle_cache[dataset_key] = mt.load_data_bundle(
+                mt.resolve_dataset_path(dataset_key)
+            )
+        data_bundle = data_bundle_cache[dataset_key]
+        sequence_bundle = build_sequence_bundle_from_artifact(artifact, data_bundle)
+        model_bundle = mt.restore_model_bundle_from_artifact(artifact)
+        evaluation = evaluate_model_bundle(
+            model_bundle=model_bundle,
+            data_bundle=data_bundle,
+            sequence_bundle=sequence_bundle,
+        )
+
+        artifacts[display_name] = {
+            "artifact": artifact,
+            "model_bundle": model_bundle,
+            "evaluation": evaluation,
+        }
+        if primary_data_bundle is None:
+            primary_data_bundle = data_bundle
+            primary_sequence_bundle = sequence_bundle
+
+        summary_records.append(
+            {
+                "model": display_name,
+                "val_accuracy": evaluation["validation"]["accuracy"],
+                "val_macro_f1": evaluation["validation"]["macro_f1"],
+                "val_weighted_f1": evaluation["validation"]["weighted_f1"],
+                "val_auc": evaluation["validation"]["auc"],
+                "test_accuracy": evaluation["test"]["accuracy"],
+                "test_macro_f1": evaluation["test"]["macro_f1"],
+                "test_weighted_f1": evaluation["test"]["weighted_f1"],
+                "test_auc": evaluation["test"]["auc"],
+            }
+        )
+
+    summary_df = pd.DataFrame(summary_records).reset_index(drop=True)
+    return summary_df, artifacts, primary_data_bundle, primary_sequence_bundle
 
 
 def plot_metric_bars(summary_df: pd.DataFrame) -> None:

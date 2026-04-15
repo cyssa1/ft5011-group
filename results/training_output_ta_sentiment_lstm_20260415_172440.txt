@@ -1,0 +1,43 @@
+Training on dataset: ta_sentiment
+
+------------------------------------ model: lstm ------------------------------------
+Loaded data: rows=24218, columns=29, feature_count=26
+Target: label | Dataset: data/ta_sentiment.csv
+Split Summary
+------------------------
+Train: rows=16941, features=26, range=2015-02-20 -> 2022-01-25, labels={-1: 3924, 0: 8621, 1: 4396}
+Validation: rows=3629, features=26, range=2022-01-26 -> 2023-07-11, labels={-1: 830, 0: 1941, 1: 858}
+Test: rows=3648, features=26, range=2023-07-12 -> 2024-12-20, labels={-1: 860, 0: 1812, 1: 976}
+------------------------
+Sequence Summary
+------------------------
+Sequence data: train=(16641, 30, 26), validation=(3629, 30, 26), test=(3648, 30, 26), T=30
+------------------------
+Final Metrics
+------------------------
+lstm:   0%|          | 0/30 [00:00<?, ?epoch/s]lstm:   0%|          | 0/30 [00:03<?, ?epoch/s, train_loss=1.0966, val_f1=0.3718, val_loss=1.0904]lstm:   3%|3         | 1/30 [00:03<01:28,  3.05s/epoch, train_loss=1.0966, val_f1=0.3718, val_loss=1.0904]lstm:   3%|3         | 1/30 [00:04<01:28,  3.05s/epoch, train_loss=1.0910, val_f1=0.3746, val_loss=1.0869]lstm:   7%|6         | 2/30 [00:04<00:55,  2.00s/epoch, train_loss=1.0910, val_f1=0.3746, val_loss=1.0869]lstm:   7%|6         | 2/30 [00:05<00:55,  2.00s/epoch, train_loss=1.0861, val_f1=0.3705, val_loss=1.0871]lstm:  10%|#         | 3/30 [00:05<00:45,  1.68s/epoch, train_loss=1.0861, val_f1=0.3705, val_loss=1.0871]lstm:  10%|#         | 3/30 [00:06<00:45,  1.68s/epoch, train_loss=1.0824, val_f1=0.3641, val_loss=1.0906]lstm:  13%|#3        | 4/30 [00:06<00:40,  1.56s/epoch, train_loss=1.0824, val_f1=0.3641, val_loss=1.0906]lstm:  13%|#3        | 4/30 [00:08<00:40,  1.56s/epoch, train_loss=1.0793, val_f1=0.3621, val_loss=1.0910]lstm:  17%|#6        | 5/30 [00:08<00:38,  1.53s/epoch, train_loss=1.0793, val_f1=0.3621, val_loss=1.0910]lstm:  17%|#6        | 5/30 [00:09<00:38,  1.53s/epoch, train_loss=1.0753, val_f1=0.3678, val_loss=1.0909]lstm:  20%|##        | 6/30 [00:09<00:35,  1.50s/epoch, train_loss=1.0753, val_f1=0.3678, val_loss=1.0909]lstm:  20%|##        | 6/30 [00:11<00:35,  1.50s/epoch, train_loss=1.0740, val_f1=0.3672, val_loss=1.0889]lstm:  23%|##3       | 7/30 [00:11<00:33,  1.48s/epoch, train_loss=1.0740, val_f1=0.3672, val_loss=1.0889]lstm:  23%|##3       | 7/30 [00:12<00:33,  1.48s/epoch, train_loss=1.0702, val_f1=0.3606, val_loss=1.0964]lstm:  27%|##6       | 8/30 [00:12<00:32,  1.46s/epoch, train_loss=1.0702, val_f1=0.3606, val_loss=1.0964]lstm:  27%|##6       | 8/30 [00:14<00:32,  1.46s/epoch, train_loss=1.0657, val_f1=0.3726, val_loss=1.0924]lstm:  30%|###       | 9/30 [00:14<00:30,  1.45s/epoch, train_loss=1.0657, val_f1=0.3726, val_loss=1.0924]lstm:  30%|###       | 9/30 [00:15<00:30,  1.45s/epoch, train_loss=1.0565, val_f1=0.3681, val_loss=1.1088]                                                                                                          
+Validation Results
+------------------
+Accuracy: 0.4233
+Macro F1: 0.3746
+Weighted F1: 0.4301
+ROC AUC (macro, OVR): 0.5607
+Confusion Matrix (rows=true, cols=pred):
+         pred_-1  pred_0  pred_1
+true_-1      201     340     289
+true_0       525    1027     389
+true_1       170     380     308
+
+Test Results
+------------
+Accuracy: 0.3994
+Macro F1: 0.3346
+Weighted F1: 0.3867
+ROC AUC (macro, OVR): 0.5315
+Confusion Matrix (rows=true, cols=pred):
+         pred_-1  pred_0  pred_1
+true_-1      338     384     138
+true_0       651    1016     145
+true_1       434     439     103
+------------------------------------ end: lstm ------------------------------------
+Saved trained model to results/models/trained_model_ta_sentiment_lstm.pkl

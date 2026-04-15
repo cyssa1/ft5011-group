@@ -1,0 +1,42 @@
+\section{Reasoning Behind the Model Progression}
+
+This note explains the reasoning process that led from a strong tabular baseline to the final LSTM-attention model. After narrowing the working dataset to technical indicators, the comparison was organized around four models: XGBoost, CNN, LSTM, and LSTM-attention. The progression was not just a sequence of increasingly complex models. Each step was motivated by a concrete limitation observed in the previous one.
+
+\subsection{Step 1: XGBoost as the starting point}
+
+XGBoost was used as the baseline model because it is a strong benchmark for structured tabular features. In the experiments, its performance was unexpectedly good and difficult to beat. This mattered for two reasons. First, it confirmed that the technical indicators were not useless. Second, it set a high empirical baseline for any neural network model that followed.
+
+However, XGBoost is still not the most natural model for this problem. The dataset is fundamentally time-series in nature, and the features are constructed from ordered market histories. A tree-based model can exploit nonlinear interactions among current features, but it does not explicitly represent sequential order. For that reason, the strong XGBoost result was treated as a challenging benchmark rather than the final modeling choice.
+
+\subsection{Step 2: CNN as the first neural benchmark}
+
+The first attempt to move beyond XGBoost was a CNN. This was a practical choice because CNN was already familiar from the coursework and provides a simple way to process rolling windows of features. The idea was that local filters could detect short-term motifs in technical signals and outperform a tabular baseline by learning patterns directly from sequences.
+
+In practice, the CNN did not perform well enough. The likely reason is that convolution mainly emphasizes local patterns and translation-invariant feature detection, while financial sequences depend heavily on temporal order. For this task, the same local pattern occurring at a different stage of a sequence does not necessarily carry the same meaning. That limitation made CNN a useful benchmark, but not a sufficiently good model for the problem.
+
+\subsection{Step 3: LSTM for ordered historical information}
+
+The next model was a standard LSTM. This change was motivated directly by the CNN result. If the weakness of CNN came from its poor handling of temporal ordering, then a recurrent model was the more appropriate next step. LSTM can preserve sequence order and update its hidden state across time, so it is better aligned with a technical trading dataset built from past observations.
+
+The plain LSTM did improve the structural match between model and data, but it still did not beat XGBoost. This suggested that learning each stock independently from its own historical sequence was not enough. In other words, the model was learning the relationship between one ticker and its own history, but not the cross-sectional relationship between stocks on the same trading day.
+
+\subsection{Step 4: LSTM-attention for cross-sectional interaction}
+
+That observation led to the final design choice: LSTM-attention. The key reasoning was that our label is not purely stock-specific. The prediction problem is also cross-sectional, because on each day the stocks should be interpreted relative to one another. A plain LSTM does not model that interaction. It processes each ticker sequence independently and therefore cannot explicitly learn how one stock should be ranked or compared against the other stocks on the same day.
+
+To address this, the training pipeline was changed so that each batch contains the ten ticker sequences from the same trading day. Each stock is first encoded by the LSTM, and then a self-attention layer is applied at the end so that the model can learn relationships across the daily cross section. This allows the final prediction for one stock to depend not only on its own history, but also on the representations of the other stocks in the same batch.
+
+This model is therefore the most aligned with the actual structure of the task. It combines temporal modeling through the LSTM with cross-sectional comparison through self-attention. Empirically, this was the first model that clearly outperformed the previous alternatives, including XGBoost, CNN, and the plain LSTM. That result supports the interpretation that both sequence information and same-day cross-sectional information are necessary for this classification problem.
+
+\section{Interpretation}
+
+Taken together, the four models form a clean progression:
+
+\begin{enumerate}[leftmargin=1.2em]
+    \item XGBoost established a strong but structurally limited baseline.
+    \item CNN tested whether a simple sequence model based on local filters was sufficient.
+    \item LSTM tested whether preserving sequence order improved the technical modeling.
+    \item LSTM-attention tested whether temporal modeling must be combined with same-day cross-sectional interaction.
+\end{enumerate}
+
+This ordering should be emphasized in the report because it reflects the reasoning process behind the final architecture. The main conclusion is not merely that LSTM-attention is the most complex model. It is that the task appears to require both dimensions of structure at the same time: ordered historical information within each ticker and cross-sectional interaction across tickers on the same day. That is the central motivation for selecting LSTM-attention as the strongest model in the current pipeline.

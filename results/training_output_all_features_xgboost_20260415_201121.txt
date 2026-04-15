@@ -1,0 +1,39 @@
+Training on dataset: all_features
+
+------------------------------------ model: xgboost ------------------------------------
+Loaded data: rows=24218, columns=44, feature_count=41
+Target: label | Dataset: data/all_features.csv
+Split Summary
+------------------------
+Train: rows=16941, features=41, range=2015-02-20 -> 2022-01-25, labels={-1: 3924, 0: 8621, 1: 4396}
+Validation: rows=3629, features=41, range=2022-01-26 -> 2023-07-11, labels={-1: 830, 0: 1941, 1: 858}
+Test: rows=3648, features=41, range=2023-07-12 -> 2024-12-20, labels={-1: 860, 0: 1812, 1: 976}
+------------------------
+Final Metrics
+------------------------
+
+Validation Results
+------------------
+Accuracy: 0.5145
+Macro F1: 0.3292
+Weighted F1: 0.4350
+ROC AUC (macro, OVR): 0.5519
+Confusion Matrix (rows=true, cols=pred):
+         pred_-1  pred_0  pred_1
+true_-1       78     672      80
+true_0       121    1691     129
+true_1        82     678      98
+
+Test Results
+------------
+Accuracy: 0.4816
+Macro F1: 0.3369
+Weighted F1: 0.4124
+ROC AUC (macro, OVR): 0.5422
+Confusion Matrix (rows=true, cols=pred):
+         pred_-1  pred_0  pred_1
+true_-1      139     617     104
+true_0       168    1521     123
+true_1       144     735      97
+------------------------------------ end: xgboost ------------------------------------
+Saved trained model to results/models/trained_model_all_features_xgboost.pkl
