@@ -1,0 +1,367 @@
+{
+  "description": "LSTM feature-set ablation. Same architecture and hyperparameters across all runs (seq=20, hidden=64, 2-layer, no attention). Only the input feature set changes. Mirrors XGBoost ablation in ablation_results.json. Primary metric: Test Macro F1.",
+  "model_config": {
+    "seq_len": 20,
+    "hidden": 64,
+    "n_layers": 2,
+    "dropout": 0.3,
+    "attention": false,
+    "lr": 0.0005,
+    "weight_decay": 0.0001,
+    "batch_size": 256,
+    "max_epochs": 100,
+    "patience": 15,
+    "label_smoothing": 0.1,
+    "scheduler": "CosineAnnealingWarmRestarts(T_0=10, T_mult=2)"
+  },
+  "results": {
+    "ta_only": {
+      "n_features": 10,
+      "feature_cols": [
+        "rsi_14",
+        "macd_hist",
+        "roc_5",
+        "stoch_k",
+        "adx_14",
+        "atr_norm_14",
+        "bb_pct_20",
+        "ema_ratio_20",
+        "obv_roc_5",
+        "vol_ratio_20"
+      ],
+      "val_macro_f1": 0.245,
+      "val_roc_auc": 0.4993,
+      "test_macro_f1": 0.208,
+      "test_roc_auc": 0.4929,
+      "validation": {
+        "accuracy": 0.2517,
+        "macro_f1": 0.245,
+        "roc_auc": 0.4993,
+        "per_class_f1": {
+          "HOLD": 0.1405,
+          "BUY": 0.2747,
+          "SELL": 0.3197
+        },
+        "confusion_matrix": [
+          [
+            159,
+            721,
+            1083
+          ],
+          [
+            70,
+            310,
+            513
+          ],
+          [
+            71,
+            333,
+            470
+          ]
+        ]
+      },
+      "test": {
+        "accuracy": 0.2257,
+        "macro_f1": 0.208,
+        "roc_auc": 0.4929,
+        "per_class_f1": {
+          "HOLD": 0.0757,
+          "BUY": 0.242,
+          "SELL": 0.3064
+        },
+        "confusion_matrix": [
+          [
+            77,
+            497,
+            1305
+          ],
+          [
+            55,
+            249,
+            808
+          ],
+          [
+            23,
+            200,
+            516
+          ]
+        ]
+      }
+    },
+    "ta_sent": {
+      "n_features": 23,
+      "feature_cols": [
+        "rsi_14",
+        "macd_hist",
+        "roc_5",
+        "stoch_k",
+        "adx_14",
+        "atr_norm_14",
+        "bb_pct_20",
+        "ema_ratio_20",
+        "obv_roc_5",
+        "vol_ratio_20",
+        "sent_avg",
+        "heat_pub",
+        "heat_read",
+        "pub_count",
+        "pos_count",
+        "neg_count",
+        "neu_count",
+        "pos_ratio",
+        "neg_ratio",
+        "sent_ma5",
+        "sent_ma10",
+        "sent_momentum",
+        "controversy"
+      ],
+      "val_macro_f1": 0.3243,
+      "val_roc_auc": 0.494,
+      "test_macro_f1": 0.2953,
+      "test_roc_auc": 0.4999,
+      "validation": {
+        "accuracy": 0.3735,
+        "macro_f1": 0.3243,
+        "roc_auc": 0.494,
+        "per_class_f1": {
+          "HOLD": 0.5128,
+          "BUY": 0.2175,
+          "SELL": 0.2426
+        },
+        "confusion_matrix": [
+          [
+            968,
+            436,
+            559
+          ],
+          [
+            440,
+            191,
+            262
+          ],
+          [
+            404,
+            236,
+            234
+          ]
+        ]
+      },
+      "test": {
+        "accuracy": 0.3137,
+        "macro_f1": 0.2953,
+        "roc_auc": 0.4999,
+        "per_class_f1": {
+          "HOLD": 0.3986,
+          "BUY": 0.1991,
+          "SELL": 0.2883
+        },
+        "confusion_matrix": [
+          [
+            619,
+            319,
+            941
+          ],
+          [
+            365,
+            171,
+            576
+          ],
+          [
+            243,
+            116,
+            380
+          ]
+        ]
+      }
+    },
+    "ta_fund": {
+      "n_features": 25,
+      "feature_cols": [
+        "rsi_14",
+        "macd_hist",
+        "roc_5",
+        "stoch_k",
+        "adx_14",
+        "atr_norm_14",
+        "bb_pct_20",
+        "ema_ratio_20",
+        "obv_roc_5",
+        "vol_ratio_20",
+        "gross_margin",
+        "op_margin",
+        "net_margin",
+        "roa",
+        "roe",
+        "debt_ratio",
+        "debt_to_equity",
+        "rd_intensity",
+        "fcf_margin",
+        "asset_turnover",
+        "rev_growth_qoq",
+        "rev_growth_yoy",
+        "ni_growth_qoq",
+        "ni_growth_yoy",
+        "eps_growth_yoy"
+      ],
+      "val_macro_f1": 0.2867,
+      "val_roc_auc": 0.5061,
+      "test_macro_f1": 0.2538,
+      "test_roc_auc": 0.5009,
+      "validation": {
+        "accuracy": 0.2863,
+        "macro_f1": 0.2867,
+        "roc_auc": 0.5061,
+        "per_class_f1": {
+          "HOLD": 0.2593,
+          "BUY": 0.302,
+          "SELL": 0.2988
+        },
+        "confusion_matrix": [
+          [
+            331,
+            834,
+            798
+          ],
+          [
+            138,
+            377,
+            378
+          ],
+          [
+            121,
+            393,
+            360
+          ]
+        ]
+      },
+      "test": {
+        "accuracy": 0.2568,
+        "macro_f1": 0.2538,
+        "roc_auc": 0.5009,
+        "per_class_f1": {
+          "HOLD": 0.1745,
+          "BUY": 0.2985,
+          "SELL": 0.2885
+        },
+        "confusion_matrix": [
+          [
+            199,
+            667,
+            1013
+          ],
+          [
+            122,
+            357,
+            633
+          ],
+          [
+            81,
+            256,
+            402
+          ]
+        ]
+      }
+    },
+    "ta_fund_sent": {
+      "n_features": 38,
+      "feature_cols": [
+        "rsi_14",
+        "macd_hist",
+        "roc_5",
+        "stoch_k",
+        "adx_14",
+        "atr_norm_14",
+        "bb_pct_20",
+        "ema_ratio_20",
+        "obv_roc_5",
+        "vol_ratio_20",
+        "gross_margin",
+        "op_margin",
+        "net_margin",
+        "roa",
+        "roe",
+        "debt_ratio",
+        "debt_to_equity",
+        "rd_intensity",
+        "fcf_margin",
+        "asset_turnover",
+        "rev_growth_qoq",
+        "rev_growth_yoy",
+        "ni_growth_qoq",
+        "ni_growth_yoy",
+        "eps_growth_yoy",
+        "sent_avg",
+        "heat_pub",
+        "heat_read",
+        "pub_count",
+        "pos_count",
+        "neg_count",
+        "neu_count",
+        "pos_ratio",
+        "neg_ratio",
+        "sent_ma5",
+        "sent_ma10",
+        "sent_momentum",
+        "controversy"
+      ],
+      "val_macro_f1": 0.3184,
+      "val_roc_auc": 0.4952,
+      "test_macro_f1": 0.2921,
+      "test_roc_auc": 0.4945,
+      "validation": {
+        "accuracy": 0.3598,
+        "macro_f1": 0.3184,
+        "roc_auc": 0.4952,
+        "per_class_f1": {
+          "HOLD": 0.4824,
+          "BUY": 0.1885,
+          "SELL": 0.2843
+        },
+        "confusion_matrix": [
+          [
+            870,
+            371,
+            722
+          ],
+          [
+            391,
+            149,
+            353
+          ],
+          [
+            383,
+            168,
+            323
+          ]
+        ]
+      },
+      "test": {
+        "accuracy": 0.3005,
+        "macro_f1": 0.2921,
+        "roc_auc": 0.4945,
+        "per_class_f1": {
+          "HOLD": 0.3541,
+          "BUY": 0.233,
+          "SELL": 0.2891
+        },
+        "confusion_matrix": [
+          [
+            518,
+            397,
+            964
+          ],
+          [
+            319,
+            218,
+            575
+          ],
+          [
+            210,
+            144,
+            385
+          ]
+        ]
+      }
+    }
+  }
+}

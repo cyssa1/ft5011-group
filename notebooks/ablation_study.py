@@ -57,6 +57,7 @@ from sklearn.metrics import (
     classification_report,
     confusion_matrix,
     f1_score,
+    roc_auc_score,
 )
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -267,12 +268,15 @@ def evaluate_pipeline(
     Returns a dict of metrics for saving to disk.
     """
     y_pred   = pipeline.predict(X)
+    probs    = pipeline.predict_proba(X)
     acc      = accuracy_score(y, y_pred)
     macro_f1 = f1_score(y, y_pred, average="macro", zero_division=0)
+    roc_auc  = roc_auc_score(y, probs, multi_class="ovr", average="macro")
 
     print(f"\n  [{split_name}]")
     print(f"  Accuracy : {acc:.4f}")
     print(f"  Macro F1 : {macro_f1:.4f}  ← primary metric")
+    print(f"  ROC AUC  : {roc_auc:.4f}  (OvR macro)")
 
     per_class_f1 = {}
     print(f"\n  Per-class F1:")
@@ -300,6 +304,7 @@ def evaluate_pipeline(
     return {
         "accuracy"        : round(acc, 4),
         "macro_f1"        : round(macro_f1, 4),
+        "roc_auc"         : round(roc_auc, 4),
         "per_class_f1"    : per_class_f1,
         "confusion_matrix": cm_df.to_dict(),
     }
@@ -383,13 +388,15 @@ def run_stage1(
     print("\n" + "="*60)
     print("STAGE 1 SUMMARY")
     print("="*60)
-    print(f"{'Model':<25} {'Val Macro F1':>12} {'Test Macro F1':>13}")
-    print("-"*60)
+    print(f"{'Model':<25} {'Val F1':>8} {'Test F1':>8} {'Val AUC':>8} {'Test AUC':>9}")
+    print("-"*62)
     for model_name, result in stage1_results.items():
         print(
             f"{model_name:<25} "
-            f"{result['validation']['macro_f1']:>12.4f} "
-            f"{result['test']['macro_f1']:>13.4f}"
+            f"{result['validation']['macro_f1']:>8.4f} "
+            f"{result['test']['macro_f1']:>8.4f} "
+            f"{result['validation']['roc_auc']:>8.4f} "
+            f"{result['test']['roc_auc']:>9.4f}"
         )
     print("="*60)
 
@@ -447,14 +454,16 @@ def run_stage2(
     print("\n" + "="*60)
     print("STAGE 2 SUMMARY — Ablation")
     print("="*60)
-    print(f"{'Feature Set':<25} {'N Features':>10} {'Val Macro F1':>12} {'Test Macro F1':>13}")
-    print("-"*60)
+    print(f"{'Feature Set':<25} {'N Feat':>6} {'Val F1':>8} {'Test F1':>8} {'Val AUC':>8} {'Test AUC':>9}")
+    print("-"*68)
     for set_name, result in stage2_results.items():
         print(
             f"{set_name:<25} "
-            f"{result['n_features']:>10} "
-            f"{result['validation']['macro_f1']:>12.4f} "
-            f"{result['test']['macro_f1']:>13.4f}"
+            f"{result['n_features']:>6} "
+            f"{result['validation']['macro_f1']:>8.4f} "
+            f"{result['test']['macro_f1']:>8.4f} "
+            f"{result['validation']['roc_auc']:>8.4f} "
+            f"{result['test']['roc_auc']:>9.4f}"
         )
     print("="*60)
 

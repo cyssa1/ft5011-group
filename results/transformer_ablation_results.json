@@ -1,0 +1,321 @@
+{
+  "model": "transformer",
+  "architecture": {
+    "d_model": 64,
+    "nhead": 4,
+    "n_layers": 2,
+    "dim_ff": 256,
+    "dropout": 0.1,
+    "seq_len": 20,
+    "pos_embed": "learnable",
+    "cls_token": true,
+    "norm_first": true
+  },
+  "training": {
+    "lr": 0.0005,
+    "weight_decay": 0.0001,
+    "batch": 256,
+    "max_epochs": 100,
+    "patience": 15,
+    "optimizer": "AdamW",
+    "scheduler": "CosineAnnealingWarmRestarts(T_0=10,T_mult=2)",
+    "loss": "CrossEntropyLoss(class_weights+label_smoothing=0.1)"
+  },
+  "results": [
+    {
+      "feature_set": "ta_only",
+      "n_features": 10,
+      "best_val_f1": 0.3038,
+      "val": {
+        "accuracy": 0.3067,
+        "macro_f1": 0.3038,
+        "roc_auc": 0.5027,
+        "per_class_f1": {
+          "HOLD": 0.3388,
+          "BUY": 0.3038,
+          "SELL": 0.2687
+        },
+        "confusion_matrix": [
+          [
+            492,
+            722,
+            749
+          ],
+          [
+            198,
+            346,
+            349
+          ],
+          [
+            251,
+            317,
+            306
+          ]
+        ]
+      },
+      "test": {
+        "accuracy": 0.255,
+        "macro_f1": 0.2525,
+        "roc_auc": 0.4903,
+        "per_class_f1": {
+          "HOLD": 0.2222,
+          "BUY": 0.253,
+          "SELL": 0.2823
+        },
+        "confusion_matrix": [
+          [
+            266,
+            471,
+            1142
+          ],
+          [
+            147,
+            260,
+            705
+          ],
+          [
+            102,
+            212,
+            425
+          ]
+        ]
+      }
+    },
+    {
+      "feature_set": "ta_sent",
+      "n_features": 23,
+      "best_val_f1": 0.254,
+      "val": {
+        "accuracy": 0.2627,
+        "macro_f1": 0.254,
+        "roc_auc": 0.5086,
+        "per_class_f1": {
+          "HOLD": 0.1088,
+          "BUY": 0.3224,
+          "SELL": 0.3309
+        },
+        "confusion_matrix": [
+          [
+            119,
+            949,
+            895
+          ],
+          [
+            62,
+            431,
+            400
+          ],
+          [
+            43,
+            401,
+            430
+          ]
+        ]
+      },
+      "test": {
+        "accuracy": 0.2394,
+        "macro_f1": 0.2208,
+        "roc_auc": 0.4976,
+        "per_class_f1": {
+          "HOLD": 0.0448,
+          "BUY": 0.307,
+          "SELL": 0.3105
+        },
+        "confusion_matrix": [
+          [
+            44,
+            647,
+            1188
+          ],
+          [
+            27,
+            362,
+            723
+          ],
+          [
+            15,
+            237,
+            487
+          ]
+        ]
+      }
+    },
+    {
+      "feature_set": "ta_fund",
+      "n_features": 25,
+      "best_val_f1": 0.2598,
+      "val": {
+        "accuracy": 0.2684,
+        "macro_f1": 0.2598,
+        "roc_auc": 0.5086,
+        "per_class_f1": {
+          "HOLD": 0.1191,
+          "BUY": 0.3181,
+          "SELL": 0.3421
+        },
+        "confusion_matrix": [
+          [
+            131,
+            838,
+            994
+          ],
+          [
+            60,
+            394,
+            439
+          ],
+          [
+            46,
+            352,
+            476
+          ]
+        ]
+      },
+      "test": {
+        "accuracy": 0.2587,
+        "macro_f1": 0.2473,
+        "roc_auc": 0.5101,
+        "per_class_f1": {
+          "HOLD": 0.0938,
+          "BUY": 0.3357,
+          "SELL": 0.3125
+        },
+        "confusion_matrix": [
+          [
+            98,
+            651,
+            1130
+          ],
+          [
+            81,
+            405,
+            626
+          ],
+          [
+            32,
+            245,
+            462
+          ]
+        ]
+      }
+    },
+    {
+      "feature_set": "ta_fund_sent",
+      "n_features": 38,
+      "best_val_f1": 0.2311,
+      "val": {
+        "accuracy": 0.2456,
+        "macro_f1": 0.2311,
+        "roc_auc": 0.5059,
+        "per_class_f1": {
+          "HOLD": 0.0579,
+          "BUY": 0.3282,
+          "SELL": 0.3071
+        },
+        "confusion_matrix": [
+          [
+            60,
+            945,
+            958
+          ],
+          [
+            19,
+            446,
+            428
+          ],
+          [
+            30,
+            434,
+            410
+          ]
+        ]
+      },
+      "test": {
+        "accuracy": 0.2397,
+        "macro_f1": 0.2269,
+        "roc_auc": 0.5041,
+        "per_class_f1": {
+          "HOLD": 0.0928,
+          "BUY": 0.284,
+          "SELL": 0.304
+        },
+        "confusion_matrix": [
+          [
+            96,
+            511,
+            1272
+          ],
+          [
+            58,
+            303,
+            751
+          ],
+          [
+            36,
+            208,
+            495
+          ]
+        ]
+      }
+    }
+  ],
+  "best": {
+    "feature_set": "ta_only",
+    "n_features": 10,
+    "best_val_f1": 0.3038,
+    "val": {
+      "accuracy": 0.3067,
+      "macro_f1": 0.3038,
+      "roc_auc": 0.5027,
+      "per_class_f1": {
+        "HOLD": 0.3388,
+        "BUY": 0.3038,
+        "SELL": 0.2687
+      },
+      "confusion_matrix": [
+        [
+          492,
+          722,
+          749
+        ],
+        [
+          198,
+          346,
+          349
+        ],
+        [
+          251,
+          317,
+          306
+        ]
+      ]
+    },
+    "test": {
+      "accuracy": 0.255,
+      "macro_f1": 0.2525,
+      "roc_auc": 0.4903,
+      "per_class_f1": {
+        "HOLD": 0.2222,
+        "BUY": 0.253,
+        "SELL": 0.2823
+      },
+      "confusion_matrix": [
+        [
+          266,
+          471,
+          1142
+        ],
+        [
+          147,
+          260,
+          705
+        ],
+        [
+          102,
+          212,
+          425
+        ]
+      ]
+    }
+  }
+}

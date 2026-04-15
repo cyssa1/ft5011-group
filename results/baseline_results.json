@@ -17,6 +17,7 @@
       "validation": {
         "accuracy": 0.5263,
         "macro_f1": 0.2299,
+        "roc_auc": 0.5,
         "per_class_f1": {
           "HOLD": 0.6896,
           "BUY": 0.0,
@@ -43,6 +44,7 @@
       "test": {
         "accuracy": 0.5038,
         "macro_f1": 0.2233,
+        "roc_auc": 0.5,
         "per_class_f1": {
           "HOLD": 0.67,
           "BUY": 0.0,
@@ -71,6 +73,7 @@
       "validation": {
         "accuracy": 0.3327,
         "macro_f1": 0.3153,
+        "roc_auc": 0.4918,
         "per_class_f1": {
           "HOLD": 0.4088,
           "BUY": 0.3097,
@@ -97,6 +100,7 @@
       "test": {
         "accuracy": 0.3268,
         "macro_f1": 0.319,
+        "roc_auc": 0.5088,
         "per_class_f1": {
           "HOLD": 0.3861,
           "BUY": 0.2958,

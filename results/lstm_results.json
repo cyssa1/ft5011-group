@@ -1,0 +1,483 @@
+{
+  "model": "lstm",
+  "features": "ta_fund_sent",
+  "n_features": 38,
+  "experiments": [
+    {
+      "name": "lstm_baseline",
+      "config": {
+        "name": "lstm_baseline",
+        "seq_len": 20,
+        "hidden": 64,
+        "n_layers": 2,
+        "dropout": 0.3,
+        "attention": false,
+        "bidirectional": false
+      },
+      "val_macro_f1": 0.3259,
+      "test_macro_f1": 0.2941,
+      "validation": {
+        "accuracy": 0.3673,
+        "macro_f1": 0.3259,
+        "roc_auc": 0.5016,
+        "per_class_f1": {
+          "HOLD": 0.4897,
+          "BUY": 0.2016,
+          "SELL": 0.2864
+        },
+        "confusion_matrix": [
+          [
+            892,
+            397,
+            674
+          ],
+          [
+            393,
+            163,
+            337
+          ],
+          [
+            395,
+            164,
+            315
+          ]
+        ]
+      },
+      "test": {
+        "accuracy": 0.3043,
+        "macro_f1": 0.2941,
+        "roc_auc": 0.4915,
+        "per_class_f1": {
+          "HOLD": 0.3727,
+          "BUY": 0.2339,
+          "SELL": 0.2755
+        },
+        "confusion_matrix": [
+          [
+            558,
+            367,
+            954
+          ],
+          [
+            324,
+            215,
+            573
+          ],
+          [
+            233,
+            144,
+            362
+          ]
+        ]
+      }
+    },
+    {
+      "name": "lstm_attention_seq20",
+      "config": {
+        "name": "lstm_attention_seq20",
+        "seq_len": 20,
+        "hidden": 64,
+        "n_layers": 2,
+        "dropout": 0.4,
+        "attention": true,
+        "bidirectional": false
+      },
+      "val_macro_f1": 0.2253,
+      "test_macro_f1": 0.2044,
+      "validation": {
+        "accuracy": 0.2496,
+        "macro_f1": 0.2253,
+        "roc_auc": 0.5207,
+        "per_class_f1": {
+          "HOLD": 0.0,
+          "BUY": 0.3446,
+          "SELL": 0.3313
+        },
+        "confusion_matrix": [
+          [
+            0,
+            1184,
+            779
+          ],
+          [
+            0,
+            531,
+            362
+          ],
+          [
+            0,
+            474,
+            400
+          ]
+        ]
+      },
+      "test": {
+        "accuracy": 0.2284,
+        "macro_f1": 0.2044,
+        "roc_auc": 0.4954,
+        "per_class_f1": {
+          "HOLD": 0.0,
+          "BUY": 0.3217,
+          "SELL": 0.2914
+        },
+        "confusion_matrix": [
+          [
+            0,
+            743,
+            1136
+          ],
+          [
+            0,
+            413,
+            699
+          ],
+          [
+            0,
+            300,
+            439
+          ]
+        ]
+      }
+    },
+    {
+      "name": "lstm_attention_seq30",
+      "config": {
+        "name": "lstm_attention_seq30",
+        "seq_len": 30,
+        "hidden": 64,
+        "n_layers": 2,
+        "dropout": 0.4,
+        "attention": true,
+        "bidirectional": false
+      },
+      "val_macro_f1": 0.2321,
+      "test_macro_f1": 0.2225,
+      "validation": {
+        "accuracy": 0.2566,
+        "macro_f1": 0.2321,
+        "roc_auc": 0.5318,
+        "per_class_f1": {
+          "HOLD": 0.0131,
+          "BUY": 0.3616,
+          "SELL": 0.3216
+        },
+        "confusion_matrix": [
+          [
+            13,
+            1242,
+            708
+          ],
+          [
+            4,
+            582,
+            307
+          ],
+          [
+            10,
+            502,
+            362
+          ]
+        ]
+      },
+      "test": {
+        "accuracy": 0.2542,
+        "macro_f1": 0.2225,
+        "roc_auc": 0.5023,
+        "per_class_f1": {
+          "HOLD": 0.0,
+          "BUY": 0.386,
+          "SELL": 0.2815
+        },
+        "confusion_matrix": [
+          [
+            0,
+            1010,
+            869
+          ],
+          [
+            1,
+            601,
+            510
+          ],
+          [
+            1,
+            391,
+            347
+          ]
+        ]
+      }
+    },
+    {
+      "name": "lstm_attention_wide",
+      "config": {
+        "name": "lstm_attention_wide",
+        "seq_len": 20,
+        "hidden": 128,
+        "n_layers": 2,
+        "dropout": 0.4,
+        "attention": true,
+        "bidirectional": false
+      },
+      "val_macro_f1": 0.2639,
+      "test_macro_f1": 0.2563,
+      "validation": {
+        "accuracy": 0.2724,
+        "macro_f1": 0.2639,
+        "roc_auc": 0.517,
+        "per_class_f1": {
+          "HOLD": 0.137,
+          "BUY": 0.347,
+          "SELL": 0.3077
+        },
+        "confusion_matrix": [
+          [
+            155,
+            1208,
+            600
+          ],
+          [
+            66,
+            541,
+            286
+          ],
+          [
+            78,
+            476,
+            320
+          ]
+        ]
+      },
+      "test": {
+        "accuracy": 0.2708,
+        "macro_f1": 0.2563,
+        "roc_auc": 0.509,
+        "per_class_f1": {
+          "HOLD": 0.1057,
+          "BUY": 0.372,
+          "SELL": 0.2911
+        },
+        "confusion_matrix": [
+          [
+            110,
+            906,
+            863
+          ],
+          [
+            56,
+            539,
+            517
+          ],
+          [
+            37,
+            341,
+            361
+          ]
+        ]
+      }
+    },
+    {
+      "name": "lstm_bidir_attention",
+      "config": {
+        "name": "lstm_bidir_attention",
+        "seq_len": 20,
+        "hidden": 64,
+        "n_layers": 2,
+        "dropout": 0.4,
+        "attention": true,
+        "bidirectional": true
+      },
+      "val_macro_f1": 0.2692,
+      "test_macro_f1": 0.2022,
+      "validation": {
+        "accuracy": 0.274,
+        "macro_f1": 0.2692,
+        "roc_auc": 0.5167,
+        "per_class_f1": {
+          "HOLD": 0.161,
+          "BUY": 0.3084,
+          "SELL": 0.3382
+        },
+        "confusion_matrix": [
+          [
+            186,
+            756,
+            1021
+          ],
+          [
+            93,
+            361,
+            439
+          ],
+          [
+            68,
+            331,
+            475
+          ]
+        ]
+      },
+      "test": {
+        "accuracy": 0.2255,
+        "macro_f1": 0.2022,
+        "roc_auc": 0.4987,
+        "per_class_f1": {
+          "HOLD": 0.0825,
+          "BUY": 0.2109,
+          "SELL": 0.3131
+        },
+        "confusion_matrix": [
+          [
+            84,
+            360,
+            1435
+          ],
+          [
+            41,
+            190,
+            881
+          ],
+          [
+            32,
+            140,
+            567
+          ]
+        ]
+      }
+    },
+    {
+      "name": "lstm_bidir_wide",
+      "config": {
+        "name": "lstm_bidir_wide",
+        "seq_len": 30,
+        "hidden": 128,
+        "n_layers": 2,
+        "dropout": 0.4,
+        "attention": true,
+        "bidirectional": true
+      },
+      "val_macro_f1": 0.2623,
+      "test_macro_f1": 0.2629,
+      "validation": {
+        "accuracy": 0.2697,
+        "macro_f1": 0.2623,
+        "roc_auc": 0.5176,
+        "per_class_f1": {
+          "HOLD": 0.1623,
+          "BUY": 0.3387,
+          "SELL": 0.2859
+        },
+        "confusion_matrix": [
+          [
+            187,
+            1184,
+            592
+          ],
+          [
+            76,
+            526,
+            291
+          ],
+          [
+            78,
+            503,
+            293
+          ]
+        ]
+      },
+      "test": {
+        "accuracy": 0.2662,
+        "macro_f1": 0.2629,
+        "roc_auc": 0.4969,
+        "per_class_f1": {
+          "HOLD": 0.1791,
+          "BUY": 0.3337,
+          "SELL": 0.276
+        },
+        "confusion_matrix": [
+          [
+            206,
+            760,
+            913
+          ],
+          [
+            125,
+            434,
+            553
+          ],
+          [
+            91,
+            295,
+            353
+          ]
+        ]
+      }
+    }
+  ],
+  "best": {
+    "name": "lstm_baseline",
+    "config": {
+      "name": "lstm_baseline",
+      "seq_len": 20,
+      "hidden": 64,
+      "n_layers": 2,
+      "dropout": 0.3,
+      "attention": false,
+      "bidirectional": false
+    },
+    "val_macro_f1": 0.3259,
+    "test_macro_f1": 0.2941,
+    "validation": {
+      "accuracy": 0.3673,
+      "macro_f1": 0.3259,
+      "roc_auc": 0.5016,
+      "per_class_f1": {
+        "HOLD": 0.4897,
+        "BUY": 0.2016,
+        "SELL": 0.2864
+      },
+      "confusion_matrix": [
+        [
+          892,
+          397,
+          674
+        ],
+        [
+          393,
+          163,
+          337
+        ],
+        [
+          395,
+          164,
+          315
+        ]
+      ]
+    },
+    "test": {
+      "accuracy": 0.3043,
+      "macro_f1": 0.2941,
+      "roc_auc": 0.4915,
+      "per_class_f1": {
+        "HOLD": 0.3727,
+        "BUY": 0.2339,
+        "SELL": 0.2755
+      },
+      "confusion_matrix": [
+        [
+          558,
+          367,
+          954
+        ],
+        [
+          324,
+          215,
+          573
+        ],
+        [
+          233,
+          144,
+          362
+        ]
+      ]
+    }
+  }
+}

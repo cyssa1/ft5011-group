@@ -61,6 +61,7 @@ from sklearn.metrics import (
     classification_report,
     confusion_matrix,
     f1_score,
+    roc_auc_score,
 )
 from sklearn.preprocessing import StandardScaler
 
@@ -197,6 +198,7 @@ def print_results(
     split_name: str,
     y_true: np.ndarray | pd.Series,
     y_pred: np.ndarray,
+    probs: np.ndarray | None = None,
 ) -> dict:
     """
     Print a standardised evaluation block for one split and return
@@ -213,10 +215,16 @@ def print_results(
     """
     acc      = accuracy_score(y_true, y_pred)
     macro_f1 = f1_score(y_true, y_pred, average="macro", zero_division=0)
+    roc_auc  = (
+        roc_auc_score(y_true, probs, multi_class="ovr", average="macro")
+        if probs is not None else None
+    )
 
     print(f"\n  [{split_name}]")
     print(f"  Accuracy  : {acc:.4f}")
     print(f"  Macro F1  : {macro_f1:.4f}  ← primary metric")
+    if roc_auc is not None:
+        print(f"  ROC AUC   : {roc_auc:.4f}  (OvR macro)")
 
     # Per-class breakdown — critical for understanding whether the model
     # is just predicting the majority class or actually learning all three
@@ -253,9 +261,10 @@ def print_results(
 
     # Return metrics dict for saving
     return {
-        "accuracy" : round(acc, 4),
-        "macro_f1" : round(macro_f1, 4),
-        "per_class_f1": per_class_f1,
+        "accuracy"        : round(acc, 4),
+        "macro_f1"        : round(macro_f1, 4),
+        "roc_auc"         : round(roc_auc, 4) if roc_auc is not None else None,
+        "per_class_f1"    : per_class_f1,
         "confusion_matrix": cm_df.to_dict(),
     }
 
@@ -293,8 +302,12 @@ def run_always_hold_baseline(
     val_pred  = np.zeros(len(y_val),  dtype=int)
     test_pred = np.zeros(len(y_test), dtype=int)
 
-    val_metrics  = print_results("Validation", y_val,  val_pred)
-    test_metrics = print_results("Test",       y_test, test_pred)
+    # Hard probabilities: always-HOLD assigns P=1 to class 0, P=0 elsewhere
+    val_probs  = np.zeros((len(y_val),  3)); val_probs[:,  0] = 1.0
+    test_probs = np.zeros((len(y_test), 3)); test_probs[:, 0] = 1.0
+
+    val_metrics  = print_results("Validation", y_val,  val_pred,  val_probs)
+    test_metrics = print_results("Test",       y_test, test_pred, test_probs)
 
     return {"validation": val_metrics, "test": test_metrics}
 
@@ -357,12 +370,14 @@ def run_logistic_regression(
     model.fit(X_train, y_train)
     print("  Done.")
 
-    # Generate predictions for val and test
-    val_pred  = model.predict(X_val)
-    test_pred = model.predict(X_test)
+    # Generate predictions and probability scores for val and test
+    val_pred   = model.predict(X_val)
+    test_pred  = model.predict(X_test)
+    val_probs  = model.predict_proba(X_val)
+    test_probs = model.predict_proba(X_test)
 
-    val_metrics  = print_results("Validation", y_val,  val_pred)
-    test_metrics = print_results("Test",       y_test, test_pred)
+    val_metrics  = print_results("Validation", y_val,  val_pred,  val_probs)
+    test_metrics = print_results("Test",       y_test, test_pred, test_probs)
 
     # Print the top feature coefficients so we can see which TA indicators
     # the model finds most useful for each class

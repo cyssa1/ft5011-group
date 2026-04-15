@@ -11,6 +11,9 @@ venv/
 .DS_Store
 
 # Data and outputs
+data/raw/
+data/intermediate/
+models/
 *.pkl
 *.pt
 *.h5
